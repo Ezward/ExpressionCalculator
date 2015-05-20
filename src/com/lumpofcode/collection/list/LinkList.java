@@ -5,7 +5,7 @@ import jdk.nashorn.internal.ir.annotations.Immutable;
 /**
  * Immutable linked list.
  *
- * The head is the value of the node and is non-null.
+ * The head is the value of the node.
  * The tail is a recursive set of LinkList nodes which ends
  * in a final node with a Nil sentinel node.
  *

@@ -1,6 +1,5 @@
 package com.lumpofcode.expression;
 
-import com.lumpofcode.collection.list.LinkList;
 import com.lumpofcode.utils.StringUtils;
 import jdk.nashorn.internal.ir.annotations.Immutable;
 
@@ -28,9 +27,11 @@ import jdk.nashorn.internal.ir.annotations.Immutable;
  *		double theValue = theExpression.evaluate();
  *		String thePrettyPrint = theExpression.format();
  * 
+ * TODO: support stack-based evaluation (rather than recursive evaluation)
  * TODO: support decimal numbers.
  * TODO: support exponential and root operators;
  * TODO: support variables and a context for evaluation; Expression.evaluate(ExpressionContext theContext);
+ * TODO: support functions
  */
 @Immutable
 public final class ExpressionEvaluator
@@ -96,12 +97,14 @@ public final class ExpressionEvaluator
 	 * @author Ezward
 	 * 
 	 * An operator and the Expression on the right side of an operator.
+	 * This if this is part of a series of operations, then next() is not null.
 	 *
 	 */
 	public interface RightExpression extends Expression
 	{
 		public abstract char operator();
 		public abstract Expression expression();
+		public abstract RightExpression next();
 	}
 	
 	/**
@@ -114,7 +117,7 @@ public final class ExpressionEvaluator
 	public interface ChainedExpression extends Expression
 	{
 		public abstract Expression left();
-		public abstract LinkList<RightExpression> right();
+		public abstract RightExpression right();
 	}
 	
 	/**
@@ -239,7 +242,7 @@ public final class ExpressionEvaluator
 					//
 					// collect sequential multiplications 
 					//
-					LinkList<RightExpression> theRightExpressions = null;
+					RightExpressionNode theRightExpressions = null;
 					while(theOperatorIndex < theLength)
 					{
 						theOperator = theInput.charAt(theOperatorIndex);
@@ -251,7 +254,7 @@ public final class ExpressionEvaluator
 						
 						// append to list of multiplications
 						final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
-						theRightExpressions = (null == theRightExpressions) ? new LinkList<>(theRightExpressionNode) : theRightExpressions.append(theRightExpressionNode);
+						theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
 
 						// skip trailing whitespace
 						theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
@@ -290,7 +293,7 @@ public final class ExpressionEvaluator
 						//
 						// parse sequential additions
 						//
-						LinkList<RightExpression> theRightExpressions = null;
+						RightExpressionNode theRightExpressions = null;
 						while(theOperatorIndex < theLength)
 						{
 							theOperator = theInput.charAt(theOperatorIndex);
@@ -302,7 +305,7 @@ public final class ExpressionEvaluator
 							
 							// append to list of additions
 							final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
-							theRightExpressions = (null == theRightExpressions) ? new LinkList<>(theRightExpressionNode) : theRightExpressions.append(theRightExpressionNode);
+							theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
 
 							// skip to past the trailing whitespace
 							theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
@@ -385,11 +388,11 @@ public final class ExpressionEvaluator
 	private static final class AdditionNode extends ExpressionNode implements AdditionExpression
 	{
 		private final ExpressionNode thisLeft;
-		private final LinkList<RightExpression> thisRight;
+		private final RightExpression thisRight;
 		
-		public AdditionNode(ExpressionNode theLeft, final LinkList<RightExpression> theRight)
+		public AdditionNode(ExpressionNode theLeft, final RightExpressionNode theRight)
 		{
-			super(theLeft.startIndex(), theRight.last().head.endIndex());
+			super(theLeft.startIndex(), theRight.last().endIndex());
 
 			thisLeft = theLeft;
 			thisRight = theRight;		// defensive copy.
@@ -404,16 +407,16 @@ public final class ExpressionEvaluator
 		 * @return immutable list of consecutive additions and subtractions
 		 */
 		@Override
-		public LinkList<RightExpression> right() { return thisRight; }
+		public RightExpression right() { return thisRight; }
 		
 
 		@Override
 		public void format(StringBuilder theBuilder)
 		{
 			thisLeft.format(theBuilder);
-			for(LinkList<RightExpression> theRight = thisRight; theRight.isNotEmpty(); theRight = theRight.tail)
+			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				theRight.head.format(theBuilder);
+				theRight.format(theBuilder);
 			}
 		}
 		
@@ -422,9 +425,9 @@ public final class ExpressionEvaluator
 		{
 			theBuilder.append('(');
 			thisLeft.formatFullParenthesis(theBuilder);
-			for(LinkList<RightExpression> theRight = thisRight; theRight.isNotEmpty(); theRight = theRight.tail)
+			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				theRight.head.formatFullParenthesis(theBuilder);
+				theRight.formatFullParenthesis(theBuilder);
 			}
 			theBuilder.append(')');
 		}
@@ -436,15 +439,15 @@ public final class ExpressionEvaluator
 			// evaluate multiplication/division expressions from left to right
 			//
 			double theLeftValue = thisLeft.evaluate();
-			for(LinkList<RightExpression> theRight = thisRight; theRight.isNotEmpty(); theRight = theRight.tail)
+			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				if('+' == theRight.head.operator())
+				if('+' == theRight.operator())
 				{
-					theLeftValue += theRight.head.evaluate();
+					theLeftValue += theRight.evaluate();
 				}
 				else
 				{
-					theLeftValue -= theRight.head.evaluate();
+					theLeftValue -= theRight.evaluate();
 				}
 			}
 			return theLeftValue;
@@ -455,26 +458,36 @@ public final class ExpressionEvaluator
 	private static final class RightExpressionNode extends ExpressionNode implements RightExpression
 	{
 		private final char thisOperator;
-		private final ExpressionNode thisRight;
-		
-		public RightExpressionNode(final int theStartIndex, final char theOperator, final ExpressionNode theRight)
+		private final ExpressionNode thisExpression;
+		private final RightExpressionNode thisNext;
+
+		public RightExpressionNode(final int theStartIndex, final char theOperator, final ExpressionNode theRight, final RightExpressionNode theNext)
 		{
 			super(theStartIndex, theRight.endIndex());
 
-			//if(null == theRight) throw new RuntimeException();
-			
+			if(null == theRight) throw new RuntimeException();
+
 			thisOperator = theOperator;
-			thisRight = theRight;
+			thisExpression = theRight;
+			thisNext = theNext;
 		}
-		
+
+		public RightExpressionNode(final int theStartIndex, final char theOperator, final ExpressionNode theRight)
+		{
+			this(theStartIndex, theOperator, theRight, null);
+		}
+
 		@Override
 		public final char operator() { return thisOperator; }
 		
 		@Override
-		public final ExpressionNode expression() { return thisRight; }
+		public final ExpressionNode expression() { return thisExpression; }
 
 		@Override
-		public final double evaluate() { return thisRight.evaluate(); }
+		public final RightExpression next() { return thisNext; }
+
+		@Override
+		public final double evaluate() { return thisExpression.evaluate(); }
 
 		@Override
 		public String format()
@@ -488,7 +501,7 @@ public final class ExpressionEvaluator
 		public final void format(StringBuilder theBuilder)
 		{
 			theBuilder.append(' ').append(thisOperator).append(' ');
-			thisRight.format(theBuilder);
+			thisExpression.format(theBuilder);
 		}
 		
 		@Override
@@ -503,9 +516,43 @@ public final class ExpressionEvaluator
 		public final void formatFullParenthesis(StringBuilder theBuilder)
 		{
 			theBuilder.append(' ').append(thisOperator).append(' ');
-			thisRight.formatFullParenthesis(theBuilder);
+			thisExpression.formatFullParenthesis(theBuilder);
 		}
-		
+
+		/**
+		 * Last RightExpression in the list.
+		 *
+		 * Note: This walks the list to find the last node,
+		 *       so this can be an expensive operation.
+		 *
+		 * @return the last non-Nil node in the list or Nil if list is empty
+		 */
+		public final RightExpressionNode last()
+		{
+			RightExpressionNode theNode = this;
+			while(null != theNode.thisNext)
+			{
+				theNode = theNode.thisNext;
+			}
+			return theNode;
+		}
+
+		/**
+		 * Append another list or right expression to this right expression.
+		 *
+		 * Note: since our expressions are immutable data structures, this
+		 *       returns a newly constructed list.  It does NOT update
+		 *       the list in place.
+		 *
+		 * @param list to append to this
+		 * @return a new list with element as the tail or this list if element is null.
+		 */
+		public RightExpressionNode append(final RightExpressionNode list)
+		{
+			if (null == list) return this;
+			if (null == thisNext) return new RightExpressionNode(startIndex(), thisOperator, thisExpression, list);   // optimization to avoid an extra recursive call
+			return new RightExpressionNode(startIndex(), thisOperator, thisExpression, thisNext.append(list));
+		}
 	}
 
 	/**
@@ -515,11 +562,11 @@ public final class ExpressionEvaluator
 	private static final class MultiplicationNode extends ExpressionNode implements MultiplicationExpression
 	{
 		private final ExpressionNode thisLeft;
-		private final LinkList<RightExpression> thisRight;
+		private final RightExpression thisRight;
 
-		public MultiplicationNode(ExpressionNode theLeft, final LinkList<RightExpression> theRight)
+		public MultiplicationNode(ExpressionNode theLeft, final RightExpressionNode theRight)
 		{
-			super(theLeft.startIndex(), theRight.last().head.endIndex());
+			super(theLeft.startIndex(), theRight.last().endIndex());
 
 			thisLeft = theLeft;
 			thisRight = theRight;
@@ -534,15 +581,15 @@ public final class ExpressionEvaluator
 		 * @return immutable list of consecutive multiplications and divisions
 		 */
 		@Override
-		public LinkList<RightExpression> right() { return thisRight; }
+		public RightExpression right() { return thisRight; }
 
 		@Override
 		public void format(StringBuilder theBuilder)
 		{
 			thisLeft.format(theBuilder);
-			for(LinkList<RightExpression> theRight = thisRight; theRight.isNotEmpty(); theRight = theRight.tail)
+			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				theRight.head.format(theBuilder);
+				theRight.format(theBuilder);
 			}
 		}
 		
@@ -551,9 +598,9 @@ public final class ExpressionEvaluator
 		{
 			theBuilder.append('(');
 			thisLeft.formatFullParenthesis(theBuilder);
-			for(LinkList<RightExpression> theRight = thisRight; theRight.isNotEmpty(); theRight = theRight.tail)
+			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				theRight.head.formatFullParenthesis(theBuilder);
+				theRight.formatFullParenthesis(theBuilder);
 			}
 			theBuilder.append(')');
 		}
@@ -565,15 +612,15 @@ public final class ExpressionEvaluator
 			// evaluate multiplication/division expressions from left to right
 			//
 			double theLeftValue = thisLeft.evaluate();
-			for(LinkList<RightExpression> theRight = thisRight; theRight.isNotEmpty(); theRight = theRight.tail)
+			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				if('/' == theRight.head.operator())
+				if('/' == theRight.operator())
 				{
-					theLeftValue /= theRight.head.evaluate();
+					theLeftValue /= theRight.evaluate();
 				}
 				else
 				{
-					theLeftValue *= theRight.head.evaluate();
+					theLeftValue *= theRight.evaluate();
 				}
 			}
 			return theLeftValue;
