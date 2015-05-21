@@ -34,7 +34,7 @@ import jdk.nashorn.internal.ir.annotations.Immutable;
  * TODO: support functions
  */
 @Immutable
-public final class ExpressionEvaluator
+public final class ExpressionParser
 {
 	/**
 	 * @author Ezward
@@ -140,7 +140,7 @@ public final class ExpressionEvaluator
 	{
 	}
 	
-	private ExpressionEvaluator() {}	// private class to enforce singleton
+	private ExpressionParser() {}	// private class to enforce singleton
 	
 	/**
 	 * Parse the input string and generate a parse tree from it.

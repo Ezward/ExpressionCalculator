@@ -1,6 +1,6 @@
 package com.lumpofcode;
 
-import com.lumpofcode.expression.ExpressionEvaluator;
+import com.lumpofcode.expression.ExpressionParser;
 
 public class Main {
 
@@ -12,7 +12,7 @@ public class Main {
 	    //
         // parse the expression given on the command line and print the evaluation
         //
-        ExpressionEvaluator.Expression theExpression = ExpressionEvaluator.parse(theInput);
+        ExpressionParser.Expression theExpression = ExpressionParser.parse(theInput);
 
         System.out.print(theExpression.format());
         System.out.print(" = ");
