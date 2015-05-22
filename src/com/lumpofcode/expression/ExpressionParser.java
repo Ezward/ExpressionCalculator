@@ -42,20 +42,68 @@ public final class ExpressionParser
 	 * Generic expression that can be evaluated and formatted.
 	 *
 	 */
-	public interface Expression
+	public interface Expression extends EvaluationStep
 	{
-		public abstract double evaluate();
+		/**
+		 * Evaluate the expression and return the result.
+		 *
+		 * @return the value
+		 */
+		double evaluate();
 
-		public abstract String format();
-		public abstract void format(StringBuilder theBuilder);
-		
-		public abstract String formatFullParenthesis();
-		public abstract void formatFullParenthesis(StringBuilder theBuilder);
+		/**
+		 * Format the expression into a human readable string.
+		 *
+		 * @return human readable string
+		 */
+		String format();
+
+		/**
+		 * Format the expression into a human readable string
+		 * using a StringBuilder.
+		 *
+		 * @param theBuilder
+		 */
+		void format(StringBuilder theBuilder);
+
+		/**
+		 * Format the expression into a fully parenthesized
+		 * form.
+		 *
+		 * @return fully parenthesized form of expression.
+		 */
+		String formatFullParenthesis();
+
+		/**
+		 * Format the expression into a fully parenthesized
+		 * form using a StringBuilder.
+		 *
+		 * @param theBuilder
+		 */
+		void formatFullParenthesis(StringBuilder theBuilder);
 		
 		// Expression's position in original input stream
-		public abstract int startIndex();
-		public abstract int endIndex();
 
+		/**
+		 * @return the offset of the start of the expression
+		 *         in the original input stream.
+		 */
+		int startIndex();
+
+		/**
+		 *
+		 * @return the offset of the end of the expression
+		 *         in the original input stream.
+		 */
+		int endIndex();
+
+		/**
+		 * Execute this expresion as one step in the
+		 * evaluation of a context.
+		 *
+		 * @param theContext
+		 */
+		void step(final EvaluationContext theContext);
 	}
 	
 	/**
@@ -433,7 +481,7 @@ public final class ExpressionParser
 		}
 		
 		@Override
-		public final double evaluate()
+		public double evaluate()
 		{
 			//
 			// evaluate multiplication/division expressions from left to right
@@ -452,6 +500,24 @@ public final class ExpressionParser
 			}
 			return theLeftValue;
 		}
+
+
+		/**
+		 * Execute one step in the interpretation of this expression
+		 * using the given evaluation context.
+		 *
+		 * @param theContext
+		 */
+		@Override
+		public void step(final EvaluationContext theContext)
+		{
+			//
+			// push the right, then push the left
+			//
+			theContext.pushStep(thisRight);
+			theContext.pushStep(thisLeft);
+		}
+
 	}
 
 	@Immutable
@@ -518,6 +584,24 @@ public final class ExpressionParser
 			theBuilder.append(' ').append(thisOperator).append(' ');
 			thisExpression.formatFullParenthesis(theBuilder);
 		}
+
+		/**
+		 * Execute one step in the interpretation of this expression
+		 * using the given evaluation context.
+		 *
+		 * @param theContext
+		 */
+		@Override
+		public void step(final EvaluationContext theContext)
+		{
+			//
+			// push the operator, push the operand, then push the next
+			//
+			if(null != thisNext) theContext.pushStep(thisNext);
+			theContext.pushStep(EvaluationOperation.getBinaryOperation(String.valueOf(thisOperator)));
+			theContext.pushStep(thisExpression);
+		}
+
 
 		/**
 		 * Last RightExpression in the list.
@@ -625,6 +709,24 @@ public final class ExpressionParser
 			}
 			return theLeftValue;
 		}
+
+		/**
+		 * Execute one step in the interpretation of this expression
+		 * using the given evaluation context.
+		 *
+		 * @param theContext
+		 */
+		@Override
+		public void step(final EvaluationContext theContext)
+		{
+			//
+			// push the right operand, then the left
+			// so that the left operand is at the top of
+			// the stack and so is evaluated first.
+			//
+			theContext.pushStep(thisRight);
+			theContext.pushStep(thisLeft);
+		}
 	}
 
 	/**
@@ -689,6 +791,24 @@ public final class ExpressionParser
 			final double theValue = thisInnerExpression.evaluate();
 			return thisSign ? theValue : -theValue;
 		}
+
+		/**
+		 * Execute one step in the interpretation of this expression
+		 * using the given evaluation context.
+		 *
+		 * @param theContext
+		 */
+		@Override
+		public void step(final EvaluationContext theContext)
+		{
+			//
+			// push the right operand, then the left
+			// so that the left operand is at the top of
+			// the stack and so is evaluated first.
+			//
+			if(!thisSign) theContext.pushStep(EvaluationOperation.Negation);
+			theContext.pushStep(thisInnerExpression);
+		}
 	}
 
 	/**
@@ -698,6 +818,7 @@ public final class ExpressionParser
 	private static final class NumberNode extends ExpressionNode implements NumberExpression
 	{
 		private final String thisNumber;
+		private final Double thisValue;
 		
 		public NumberNode(final int theStartIndex, final int theEndIndex, final String theNumber)
 		{
@@ -706,7 +827,7 @@ public final class ExpressionParser
 			if((null == theNumber) || theNumber.isEmpty()) throw new RuntimeException();
 			
 			thisNumber = theNumber;
-			
+			thisValue = Double.valueOf(theNumber);
 		}
 		
 		@Override
@@ -732,6 +853,21 @@ public final class ExpressionParser
 				return -(StringUtils.parseInteger(thisNumber, 1, thisNumber.length()));
 			}
 			return StringUtils.parseInteger(thisNumber, 0, thisNumber.length());
+		}
+
+		/**
+		 * Execute one step in the interpretation of this expression
+		 * Using the given context.
+		 *
+		 * @param theContext
+		 */
+		@Override
+		public void step(final EvaluationContext theContext)
+		{
+			//
+			// push the number onto the value stack.
+			//
+			theContext.pushValue(thisValue);
 		}
 	}
 }

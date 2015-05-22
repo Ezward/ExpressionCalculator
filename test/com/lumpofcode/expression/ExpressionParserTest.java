@@ -11,7 +11,6 @@ public class ExpressionParserTest
 	{
 		final ExpressionParser.Expression theExpression = ExpressionParser.parse("");
 		assertNull(theExpression);
-		
 	}
 
 	@Test
