@@ -26,9 +26,9 @@ public final class ExpressionEvaluator
         // when the stack is empty, return the value
         // on the stack (should be the only value)
         //
-        while(!theContext.isEvaluationComplete())
+        while(!theContext.isEvaluationStackEmpty())
         {
-            final EvaluationStep theStep = theContext.popStep();
+            final EvaluationStep theStep = theContext.popEvaluationStep();
             theStep.step(theContext);
         }
 

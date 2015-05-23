@@ -1,6 +1,8 @@
 package com.lumpofcode.expression;
 
 /**
+ * Class to expose operation as EvaluationSteps.
+ *
  * Created by emurphy on 5/21/15.
  */
 public final class EvaluationOperation
@@ -13,7 +15,7 @@ public final class EvaluationOperation
      * @param theOperator
      * @return the EvaluationStep for the given operator
      */
-    public static final EvaluationStep getBinaryOperation(final String theOperator)
+    public static EvaluationStep getBinaryOperation(final String theOperator)
     {
         if("+".equals(theOperator)) return Addition;
         if("-".equals(theOperator)) return Subtraction;
@@ -28,7 +30,7 @@ public final class EvaluationOperation
      * @param theOperator
      * @return the EvaluationStep for the given operator.
      */
-    public static final EvaluationStep getUnaryOperation(final String theOperator)
+    public static EvaluationStep getUnaryOperation(final String theOperator)
     {
         if("+".equals(theOperator)) return NoOp;
         if("-".equals(theOperator)) return Negation;
@@ -38,10 +40,10 @@ public final class EvaluationOperation
     /**
      * Singleton for an addition operation
      */
-    public static final EvaluationStep Addition = new EvaluationStep()
+    public static EvaluationStep Addition = new EvaluationStep()
     {
         @Override
-        public void step(EvaluationContext theContext)
+        public void step(final EvaluationContext theContext)
         {
             //
             // pop the top 2 values and add them
@@ -56,10 +58,10 @@ public final class EvaluationOperation
     /**
      * Singleton for a subtraction operation
      */
-    public static final EvaluationStep Subtraction = new EvaluationStep()
+    public static EvaluationStep Subtraction = new EvaluationStep()
     {
         @Override
-        public void step(EvaluationContext theContext)
+        public void step(final EvaluationContext theContext)
         {
             //
             // pop the top 2 values and add them
@@ -74,10 +76,10 @@ public final class EvaluationOperation
     /**
      * Singleton for a multiplication operation
      */
-    public static final EvaluationStep Mulitplication = new EvaluationStep()
+    public static EvaluationStep Mulitplication = new EvaluationStep()
     {
         @Override
-        public void step(EvaluationContext theContext)
+        public void step(final EvaluationContext theContext)
         {
             //
             // pop the top 2 values and add them
@@ -92,10 +94,10 @@ public final class EvaluationOperation
     /**
      * Singleton for a division operation
      */
-    public static final EvaluationStep Division = new EvaluationStep()
+    public static EvaluationStep Division = new EvaluationStep()
     {
         @Override
-        public void step(EvaluationContext theContext)
+        public void step(final EvaluationContext theContext)
         {
             //
             // pop the top 2 values and add them
@@ -110,10 +112,10 @@ public final class EvaluationOperation
     /**
      * Singletop for a unary negation operation
      */
-    public static final EvaluationStep Negation = new EvaluationStep()
+    public static EvaluationStep Negation = new EvaluationStep()
     {
         @Override
-        public void step(EvaluationContext theContext)
+        public void step(final EvaluationContext theContext)
         {
             //
             // pop the value, negate, push the value
@@ -126,10 +128,10 @@ public final class EvaluationOperation
     /**
      * Singleton for no operation
      */
-    public static final EvaluationStep NoOp = new EvaluationStep()
+    public static EvaluationStep NoOp = new EvaluationStep()
     {
         @Override
-        public void step(EvaluationContext theContext)
+        public void step(final EvaluationContext theContext)
         {
             //
             // do nothing

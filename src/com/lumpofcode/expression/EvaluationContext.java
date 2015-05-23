@@ -3,12 +3,23 @@ package com.lumpofcode.expression;
 import com.lumpofcode.collection.list.LinkList;
 
 /**
+ * Context for step-wise evaluation of an ExpressionParser.Expression
+ * (the result of ExpressionParser.parse()).
+ *
+ * The expression to be evaluated is passed to the constructor.
+ * Each step is accomplished by popping the top of the evaluation stack,
+ * and then processing that step.  The EvaluationStep itself is passed
+ * the context so it can push it results onto the evaluation stack and/or
+ * the value stack appropriately.  When the evaluation stack is empty,
+ * then the evaluation is completed and the value stack should have
+ * a single entry which is the result.
+ *
  * Created by emurphy on 5/20/15.
  */
-public class EvaluationContext
+public final class EvaluationContext
 {
-    LinkList<EvaluationStep> thisEvaluationStack = LinkList.Nil;
-    LinkList<Double> thisValueStack = LinkList.Nil;
+    private LinkList<EvaluationStep> thisEvaluationStack = LinkList.Nil;
+    private LinkList<Double> thisValueStack = LinkList.Nil;
 
     public EvaluationContext(final EvaluationStep expression)
     {
@@ -16,38 +27,75 @@ public class EvaluationContext
         thisEvaluationStack = thisEvaluationStack.insert(expression);
     }
 
+    /**
+     * Push a value onto the value stack.
+     *
+     * @param theValue
+     */
     public void pushValue(final Double theValue)
     {
         thisValueStack = thisValueStack.insert(theValue);
     }
+
+    /**
+     * Pop a value from the value stack.
+     *
+     * @return the value from the top of the value stack.
+     */
     public Double popValue()
     {
         final Double theValue = thisValueStack.head;
         thisValueStack = thisValueStack.tail;
         return theValue;
     }
+
+    /**
+     * Determine if the value stack is empty.
+     *
+     * @return true if value stack is empty, false otherwise.
+     */
     public boolean isValueStackEmpty()
     {
         return thisValueStack.isEmpty();
     }
 
-    public void pushStep(final EvaluationStep theExpression)
+    /**
+     * Push a step onto the evaluation stack.
+     *
+     * @param theEvaluationStep
+     */
+    public void pushEvaluationStep(final EvaluationStep theEvaluationStep)
     {
         //
         // don't bother pushing noops
         //
-        if(EvaluationOperation.NoOp != theExpression)
+        if(EvaluationOperation.NoOp != theEvaluationStep)
         {
-            thisEvaluationStack = thisEvaluationStack.insert(theExpression);
+            thisEvaluationStack = thisEvaluationStack.insert(theEvaluationStep);
         }
     }
-    public EvaluationStep popStep()
+
+    /**
+     * Pop a step from the evaluation stack in order
+     * for it to be processed.
+     *
+     * @return the EvaluationStep from the top of the stack.
+     */
+    public EvaluationStep popEvaluationStep()
     {
         final EvaluationStep theExpression = thisEvaluationStack.head;
         thisEvaluationStack = thisEvaluationStack.tail;
         return theExpression;
     }
-    public boolean isEvaluationComplete()
+
+    /**
+     * Determine if the evaluation stack is empty.
+     * If it is empty after processing a popped EvaluationStep,
+     * then the evaluation is complete.
+     *
+     * @return true if the evaluation is complete, false if not.
+     */
+    public boolean isEvaluationStackEmpty()
     {
         return thisEvaluationStack.isEmpty();
     }

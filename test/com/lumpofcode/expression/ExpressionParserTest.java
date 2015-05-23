@@ -228,17 +228,27 @@ public class ExpressionParserTest
 		theExpression.format(theBuilder);
 		assertEquals("-(((10 + 5) x 6) - 20 / 2 x 3 + 100 - 50)", theBuilder.toString());
 	}
-	
+
 	@Test
 	public void testParseParenthesisWithNegativeNumber()
 	{
 		ExpressionParser.Expression theExpression = ExpressionParser.parse(" (((10 + 5) x -6) - -20 / -2 x 3 + -100 - 50)");
 		assertNotNull(theExpression);
-		
+
 		assertTrue(-270 == theExpression.evaluate());
 		assertEquals("(((10 + 5) x -6) - -20 / -2 x 3 + -100 - 50)", theExpression.format());
 	}
-	
+
+	@Test
+	public void testParseParenthesisWithDecimalNumber()
+	{
+		ExpressionParser.Expression theExpression = ExpressionParser.parse("(((10.0e0 + 5.0e0) x -6.0e0) - -20e0 / -2.000e000 x 3e0 + -1.0e02 - 5.0e1)");
+		assertNotNull(theExpression);
+
+		assertTrue(-270 == theExpression.evaluate());
+		assertEquals("(((10.0e0 + 5.0e0) x -6.0e0) - -20e0 / -2.000e000 x 3e0 + -1.0e02 - 5.0e1)", theExpression.format());
+	}
+
 	@Test
 	public void testFormatFullParenthesis()
 	{
