@@ -44,6 +44,8 @@ public final class EvaluationContext
      */
     public Double popValue()
     {
+        if(thisValueStack.isEmpty()) throw new RuntimeException("Attempt to pop from the value stack when the stack is empty.");
+
         final Double theValue = thisValueStack.head;
         thisValueStack = thisValueStack.tail;
         return theValue;
@@ -83,6 +85,8 @@ public final class EvaluationContext
      */
     public EvaluationStep popEvaluationStep()
     {
+        if(thisEvaluationStack.isEmpty()) throw new RuntimeException("Attempt to pop from the evaluation stack when the  stack is empty.");
+
         final EvaluationStep theExpression = thisEvaluationStack.head;
         thisEvaluationStack = thisEvaluationStack.tail;
         return theExpression;

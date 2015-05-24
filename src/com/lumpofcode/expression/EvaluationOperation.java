@@ -21,7 +21,7 @@ public final class EvaluationOperation
         if("-".equals(theOperator)) return Subtraction;
         if("*".equals(theOperator)) return Mulitplication;
         if("/".equals(theOperator)) return Division;
-        throw new IllegalStateException("Invalid binary operator.");
+        throw new IllegalStateException("Invalid binary operator ($operator).".replace("$operator", (null != theOperator) ? theOperator : "null"));
     }
 
     /**
@@ -34,7 +34,7 @@ public final class EvaluationOperation
     {
         if("+".equals(theOperator)) return NoOp;
         if("-".equals(theOperator)) return Negation;
-        throw new IllegalStateException("Invalid unary operator.");
+        throw new IllegalStateException("Invalid unary operator ($operator).".replace("$operator", (null != theOperator) ? theOperator : "null"));
     }
 
     /**

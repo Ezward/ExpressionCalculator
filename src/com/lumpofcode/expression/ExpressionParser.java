@@ -361,7 +361,7 @@ public final class ExpressionParser
 			if(theOperatorIndex < theLength)
 			{
 				char theOperator = theInput.charAt(theOperatorIndex);
-				if(('*' == theOperator) || ('x' == theOperator) || ('/' == theOperator))
+				if(('*' == theOperator) || ('/' == theOperator))
 				{
 					//
 					// collect sequential multiplications 
@@ -569,9 +569,13 @@ public final class ExpressionParser
 				{
 					theLeftValue += theRight.evaluate();
 				}
-				else
+				else if('-' == theRight.operator())
 				{
 					theLeftValue -= theRight.evaluate();
+				}
+				else
+				{
+					throw new IllegalStateException("Unexpected operator ($operator) encountered while evaluating an AdditionNode.".replace("$operator", String.valueOf(theRight.operator())));
 				}
 			}
 			return theLeftValue;
@@ -778,9 +782,13 @@ public final class ExpressionParser
 				{
 					theLeftValue /= theRight.evaluate();
 				}
-				else
+				else if('*' == theRight.operator())
 				{
 					theLeftValue *= theRight.evaluate();
+				}
+				else
+				{
+					throw new IllegalStateException("Unexpected operator ($operator) encountered while evaluating a MultiplicationNode.".replace("$operator", String.valueOf(theRight.operator())));
 				}
 			}
 			return theLeftValue;

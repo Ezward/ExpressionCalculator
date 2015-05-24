@@ -141,15 +141,6 @@ public class ExpressionParserTest
 		theExpression.format(theBuilder);
 		assertEquals("1 * 2 * 3 * 4 * 5", theBuilder.toString());
 		
-		// test for bug: 3x4 was parsed incorrectly; treated 3x4 as one token.
-		theExpression = ExpressionParser.parse("3x4");
-		assertNotNull(theExpression);
-		
-		assertTrue(12 == theExpression.evaluate());
-		theBuilder = new StringBuilder();
-		theExpression.format(theBuilder);
-		assertEquals("3 x 4", theBuilder.toString());
-
 	}
 	
 	@Test
@@ -218,41 +209,29 @@ public class ExpressionParserTest
 	}
 
 	@Test
-	public void testParseParenthesisWithX()
-	{
-		ExpressionParser.Expression theExpression = ExpressionParser.parse("-(((10 + 5) x 6) - 20 / 2 x 3 + 100 - 50) ");
-		assertNotNull(theExpression);
-		
-		assertTrue(-110 == theExpression.evaluate());
-		StringBuilder theBuilder = new StringBuilder();
-		theExpression.format(theBuilder);
-		assertEquals("-(((10 + 5) x 6) - 20 / 2 x 3 + 100 - 50)", theBuilder.toString());
-	}
-
-	@Test
 	public void testParseParenthesisWithNegativeNumber()
 	{
-		ExpressionParser.Expression theExpression = ExpressionParser.parse(" (((10 + 5) x -6) - -20 / -2 x 3 + -100 - 50)");
+		ExpressionParser.Expression theExpression = ExpressionParser.parse(" (((10 + 5) * -6) - -20 / -2 * 3 + -100 - 50)");
 		assertNotNull(theExpression);
 
 		assertTrue(-270 == theExpression.evaluate());
-		assertEquals("(((10 + 5) x -6) - -20 / -2 x 3 + -100 - 50)", theExpression.format());
+		assertEquals("(((10 + 5) * -6) - -20 / -2 * 3 + -100 - 50)", theExpression.format());
 	}
 
 	@Test
 	public void testParseParenthesisWithDecimalNumber()
 	{
-		ExpressionParser.Expression theExpression = ExpressionParser.parse("(((10.0e0 + 5.0e0) x -6.0e0) - -20e0 / -2.000e000 x 3e0 + -1.0e02 - 5.0e1)");
+		ExpressionParser.Expression theExpression = ExpressionParser.parse("(((10.0e0 + 5.0e0) * -6.0e0) - -20e0 / -2.000e000 * 3e0 + -1.0e02 - 5.0e1)");
 		assertNotNull(theExpression);
 
 		assertTrue(-270 == theExpression.evaluate());
-		assertEquals("(((10.0e0 + 5.0e0) x -6.0e0) - -20e0 / -2.000e000 x 3e0 + -1.0e02 - 5.0e1)", theExpression.format());
+		assertEquals("(((10.0e0 + 5.0e0) * -6.0e0) - -20e0 / -2.000e000 * 3e0 + -1.0e02 - 5.0e1)", theExpression.format());
 	}
 
 	@Test
 	public void testFormatFullParenthesis()
 	{
-		ExpressionParser.Expression theExpression = ExpressionParser.parse(" 10 + 5 x -6 - -20 / -2 x 3 + -100 - 50 ");
+		ExpressionParser.Expression theExpression = ExpressionParser.parse(" 10 + 5 * -6 - -20 / -2 * 3 + -100 - 50 ");
 		assertNotNull(theExpression);
 		
 		System.out.println(theExpression.evaluate());
@@ -260,7 +239,7 @@ public class ExpressionParserTest
 		System.out.println(theExpression.formatFullParenthesis());
 		
 		assertTrue(-200 == theExpression.evaluate());
-		assertEquals("10 + 5 x -6 - -20 / -2 x 3 + -100 - 50", theExpression.format());
-		assertEquals("(10 + (5 x -6) - (-20 / -2 x 3) + -100 - 50)", theExpression.formatFullParenthesis());
+		assertEquals("10 + 5 * -6 - -20 / -2 * 3 + -100 - 50", theExpression.format());
+		assertEquals("(10 + (5 * -6) - (-20 / -2 * 3) + -100 - 50)", theExpression.formatFullParenthesis());
 	}
 }
