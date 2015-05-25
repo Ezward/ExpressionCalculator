@@ -40,7 +40,7 @@ public final class EvaluationOperation
     /**
      * Singleton for an addition operation
      */
-    public static EvaluationStep Addition = new EvaluationStep()
+    public static final EvaluationStep Addition = new EvaluationStep()
     {
         @Override
         public void step(final EvaluationContext theContext)
@@ -58,7 +58,7 @@ public final class EvaluationOperation
     /**
      * Singleton for a subtraction operation
      */
-    public static EvaluationStep Subtraction = new EvaluationStep()
+    public static final EvaluationStep Subtraction = new EvaluationStep()
     {
         @Override
         public void step(final EvaluationContext theContext)
@@ -76,7 +76,7 @@ public final class EvaluationOperation
     /**
      * Singleton for a multiplication operation
      */
-    public static EvaluationStep Mulitplication = new EvaluationStep()
+    public static final EvaluationStep Mulitplication = new EvaluationStep()
     {
         @Override
         public void step(final EvaluationContext theContext)
@@ -94,7 +94,7 @@ public final class EvaluationOperation
     /**
      * Singleton for a division operation
      */
-    public static EvaluationStep Division = new EvaluationStep()
+    public static final EvaluationStep Division = new EvaluationStep()
     {
         @Override
         public void step(final EvaluationContext theContext)
@@ -112,7 +112,7 @@ public final class EvaluationOperation
     /**
      * Singletop for a unary negation operation
      */
-    public static EvaluationStep Negation = new EvaluationStep()
+    public static final EvaluationStep Negation = new EvaluationStep()
     {
         @Override
         public void step(final EvaluationContext theContext)
@@ -128,7 +128,7 @@ public final class EvaluationOperation
     /**
      * Singleton for no operation
      */
-    public static EvaluationStep NoOp = new EvaluationStep()
+    public static final EvaluationStep NoOp = new EvaluationStep()
     {
         @Override
         public void step(final EvaluationContext theContext)
