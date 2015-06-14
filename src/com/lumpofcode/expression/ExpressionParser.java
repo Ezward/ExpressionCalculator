@@ -1,7 +1,7 @@
 package com.lumpofcode.expression;
 
+import com.lumpofcode.annotation.Immutable;
 import com.lumpofcode.utils.StringUtils;
-import jdk.nashorn.internal.ir.annotations.Immutable;
 
 /**
  * @author Ezward

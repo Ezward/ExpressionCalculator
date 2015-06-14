@@ -1,6 +1,7 @@
 package com.lumpofcode.collection.list;
 
-import jdk.nashorn.internal.ir.annotations.Immutable;
+
+import com.lumpofcode.annotation.Immutable;
 
 /**
  * Immutable linked list.
