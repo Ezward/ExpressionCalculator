@@ -2,6 +2,7 @@ package com.lumpofcode.collection.list;
 
 
 import com.lumpofcode.annotation.Immutable;
+import com.lumpofcode.annotation.NotNull;
 
 /**
  * Immutable linked list.
@@ -30,7 +31,7 @@ public final class LinkList<T>
      * @param head non-null element
      * @param tail the rest of the list; may be null at end of list
      */
-    public LinkList(final T head, final LinkList<T> tail)
+    public LinkList(final @NotNull T head, final @NotNull LinkList<T> tail)
     {
         if(null == head) throw new IllegalArgumentException();
         if(null == tail) throw new IllegalArgumentException();
