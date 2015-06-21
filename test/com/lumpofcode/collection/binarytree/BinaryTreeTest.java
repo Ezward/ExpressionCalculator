@@ -1,6 +1,7 @@
 package com.lumpofcode.collection.binarytree;
 
 import com.lumpofcode.collection.compare.IntegerComparator;
+import com.lumpofcode.collection.list.LinkList;
 import org.junit.Test;
 
 import java.util.Comparator;
@@ -8,7 +9,6 @@ import java.util.Random;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -55,6 +55,34 @@ public class BinaryTreeTest
     }
 
     @Test
+    public void testUpdate()
+    {
+        final IntegerComparator theComparator = new IntegerComparator();
+        BinaryTree<Integer> theBinaryTree = new BinaryTree<>(10);
+        theBinaryTree = theBinaryTree.insert(5, theComparator);
+        theBinaryTree = theBinaryTree.insert(15, theComparator);
+
+        //
+        // if we 'update' a value that does not exist, nothing is changed.
+        //
+        assertTrue("Updating a value that does not exists does not change the tree.",
+                   theBinaryTree == theBinaryTree.update(25, theComparator));
+
+        //
+        // if we insert same exact value, the tree should not change
+        //
+        assertTrue("If we update the exact same value instance, the tree should not change.",
+                   theBinaryTree == theBinaryTree.update(
+                           theBinaryTree.find(10, theComparator).value, theComparator));
+        assertTrue("If we update the exact same value instance, the tree should not change.",
+                   theBinaryTree == theBinaryTree.update(
+                           theBinaryTree.find(5, theComparator).value, theComparator));
+        assertTrue("If we update the exact same value instance, the tree should not change.",
+                   theBinaryTree == theBinaryTree.update(
+                           theBinaryTree.find(15, theComparator).value, theComparator));
+    }
+
+    @Test
     public void testRandomInsert()
     {
         //
@@ -63,7 +91,7 @@ public class BinaryTreeTest
         //
         final IntegerComparator theComparator = new IntegerComparator();
         BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
-        final int n = 100;
+        final int n = 1000;
 
         final Random random = new Random();
         for(int i = 0; i < n; i += 1)
@@ -78,6 +106,50 @@ public class BinaryTreeTest
         assertIntegerBinarySearchTree(theBinaryTree);
         assertBinarySearchTree(theBinaryTree, theComparator);
     }
+
+    @Test
+    public void testFind()
+    {
+        final IntegerComparator theComparator = new IntegerComparator();
+        BinaryTree<Integer> theBinaryTree = new BinaryTree<>(10);
+        theBinaryTree = theBinaryTree.insert(5, theComparator);
+        theBinaryTree = theBinaryTree.insert(15, theComparator);
+
+        assertTrue("Should find 10", 10 == theBinaryTree.find(10, theComparator).value.intValue());
+        assertTrue("Should find 5",   5 == theBinaryTree.find( 5, theComparator).value.intValue());
+        assertTrue("Should find 10", 15 == theBinaryTree.find(15, theComparator).value.intValue());
+
+        assertTrue("Should not find 7.", theBinaryTree.Nil == theBinaryTree.find(7, theComparator));
+
+    }
+
+    @Test
+    public void testRandomFind()
+    {
+        final IntegerComparator theComparator = new IntegerComparator();
+        BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
+        final int n = 1000;
+        LinkList<Integer> theIntegerList = LinkList.Nil;    // list will hold the inserted numbers
+
+        final Random random = new Random();
+        for(int i = 0; i < n; i += 1)
+        {
+            final Integer theRandomInt = random.nextInt();
+            theIntegerList = theIntegerList.insert(theRandomInt);
+            theBinaryTree = theBinaryTree.insert(theRandomInt, theComparator);
+        }
+
+        //
+        // Each number that we stashed in the list should also be in the tree.
+        //
+        for(LinkList<Integer> theList = theIntegerList; theList != LinkList.Nil; theList = theList.tail)
+        {
+            final Integer theInteger = theList.head;
+            assertTrue("We should find the integer in the tree.",
+                       BinaryTree.Nil != theBinaryTree.find(theInteger, theComparator));
+        }
+    }
+
 
     /**
      * Helper to test an Integer binary search tree without the comparator.
@@ -148,15 +220,209 @@ public class BinaryTreeTest
         assertBinarySearchTree(theBinaryTree.right, theComparator);
     }
 
+
     @Test
     public void testRemovePromoteLeft()
     {
-        fail("tbd");
+        final IntegerComparator theComparator = new IntegerComparator();
+
+        //
+        //          10
+        //          |
+        //      5---+---15
+        //      |        |
+        //   3--+--8  13-+-18
+        //   |     |
+        // 2-+-4 6-+-9
+        //
+        BinaryTree<Integer> theBinaryTree = new BinaryTree<>(10);
+        theBinaryTree = theBinaryTree.insert(5, theComparator);
+        theBinaryTree = theBinaryTree.insert(15, theComparator);
+        theBinaryTree = theBinaryTree.insert(3, theComparator);
+        theBinaryTree = theBinaryTree.insert(8, theComparator);
+        theBinaryTree = theBinaryTree.insert(2, theComparator);
+        theBinaryTree = theBinaryTree.insert(4, theComparator);
+        theBinaryTree = theBinaryTree.insert(6, theComparator);
+        theBinaryTree = theBinaryTree.insert(9, theComparator);
+        theBinaryTree = theBinaryTree.insert(13, theComparator);
+        theBinaryTree = theBinaryTree.insert(18, theComparator);
+
+        //
+        //            10
+        //            |
+        //        3---+---15
+        //        |        |
+        //     2--+--8  13-+-18
+        //           |
+        //         6-+-9
+        //         |
+        //       4-+-Nil
+        //
+
+        final BinaryTree<Integer> theNewTree = theBinaryTree.removePromoteLeft(5, theComparator);
+        assertTrue("Root is 10.", 10 == theNewTree.value.intValue());
+
+        // right is unchanged
+        assertTrue("Root.right is 15", 15 == theNewTree.right.value.intValue());
+        assertTrue("Root.right.left is 13", 13 == theNewTree.right.left.value.intValue());
+        assertTrue("Root.right.left.left is Nil", BinaryTree.Nil == theNewTree.right.left.left);
+        assertTrue("Root.right.left.right is Nil", BinaryTree.Nil == theNewTree.right.left.right);
+        assertTrue("Root.right.right is 18", 18 == theNewTree.right.right.value.intValue());
+        assertTrue("Root.right.right.left is Nil", BinaryTree.Nil == theNewTree.right.right.left);
+        assertTrue("Root.right.right.right is Nil", BinaryTree.Nil == theNewTree.right.right.right);
+
+        // left is promoted
+        assertTrue("Root.left is 3.", 3 == theNewTree.left.value.intValue());
+        assertTrue("Root.left.left is 2.", 2 == theNewTree.left.left.value.intValue());
+        assertTrue("Root.left.left.left is Nil.", BinaryTree.Nil == theNewTree.left.left.left);
+        assertTrue("Root.left.left.right is Nil.", BinaryTree.Nil == theNewTree.left.left.left);
+
+        assertTrue("Root.left.right is 8.", 8 == theNewTree.left.right.value.intValue());
+        assertTrue("Root.left.right.left is 6.", 6 == theNewTree.left.right.left.value.intValue());
+        assertTrue("Root.left.right.left.left is 4.", 4 == theNewTree.left.right.left.left.value.intValue());
+        assertTrue("Root.left.right.left.right is Nil.", BinaryTree.Nil == theNewTree.left.right.left.right);
+        assertTrue("Root.left.right.right is 9.", 9 == theNewTree.left.right.right.value.intValue());
+
+        assertTrue("Should not find 5.", BinaryTree.Nil == theNewTree.find(5, theComparator));
+
+        //
+        // now recursively walk the tree to see if it is a valid binary search tree
+        //
+        assertIntegerBinarySearchTree(theNewTree);
     }
 
     @Test
     public void testRemovePromoteRight()
     {
-        fail("tdb");
+        final IntegerComparator theComparator = new IntegerComparator();
+
+        //
+        //          10
+        //          |
+        //      5---+---15
+        //      |        |
+        //   3--+--8  13-+-18
+        //   |     |
+        // 2-+-4 6-+-9
+        //
+        BinaryTree<Integer> theBinaryTree = new BinaryTree<>(10);
+        theBinaryTree = theBinaryTree.insert(5, theComparator);
+        theBinaryTree = theBinaryTree.insert(15, theComparator);
+        theBinaryTree = theBinaryTree.insert(3, theComparator);
+        theBinaryTree = theBinaryTree.insert(8, theComparator);
+        theBinaryTree = theBinaryTree.insert(2, theComparator);
+        theBinaryTree = theBinaryTree.insert(4, theComparator);
+        theBinaryTree = theBinaryTree.insert(6, theComparator);
+        theBinaryTree = theBinaryTree.insert(9, theComparator);
+        theBinaryTree = theBinaryTree.insert(13, theComparator);
+        theBinaryTree = theBinaryTree.insert(18, theComparator);
+
+        //
+        //          10
+        //          |
+        //      8---+---15
+        //      |        |
+        //   3--+--9  13-+-18
+        //   |
+        // 2-+-4
+        //     |
+        // Nil-+-6
+        //
+
+        final BinaryTree<Integer> theNewTree = theBinaryTree.removePromoteRight(5, theComparator);
+        assertTrue("Root is 10.", 10 == theNewTree.value.intValue());
+
+        // right is unchanged
+        assertTrue("Root.right is 15", 15 == theNewTree.right.value.intValue());
+        assertTrue("Root.right.left is 13", 13 == theNewTree.right.left.value.intValue());
+        assertTrue("Root.right.left.left is Nil", BinaryTree.Nil == theNewTree.right.left.left);
+        assertTrue("Root.right.left.right is Nil", BinaryTree.Nil == theNewTree.right.left.right);
+        assertTrue("Root.right.right is 18", 18 == theNewTree.right.right.value.intValue());
+        assertTrue("Root.right.right.left is Nil", BinaryTree.Nil == theNewTree.right.right.left);
+        assertTrue("Root.right.right.right is Nil", BinaryTree.Nil == theNewTree.right.right.right);
+
+        // right is promoted
+        assertTrue("Root.left is 8.", 8 == theNewTree.left.value.intValue());
+        assertTrue("Root.left.left is 3.", 3 == theNewTree.left.left.value.intValue());
+        assertTrue("Root.left.left.left is 2.", 2 == theNewTree.left.left.left.value.intValue());
+        assertTrue("Root.left.left.right is 4.", 4 == theNewTree.left.left.right.value.intValue());
+        assertTrue("Root.left.left.right.right is 6.", 6 == theNewTree.left.left.right.right.value.intValue());
+        assertTrue("Root.left.left.right.left is Nil.", BinaryTree.Nil == theNewTree.left.left.right.left);
+        assertTrue("Root.left.right is 9.", 9 == theNewTree.left.right.value.intValue());
+
+        assertTrue("Should not find 5.", BinaryTree.Nil == theNewTree.find(5, theComparator));
+
+        //
+        // now recursively walk the tree to see if it is a valid binary search tree
+        //
+        assertIntegerBinarySearchTree(theNewTree);
     }
+
+    @Test
+    public void testRandomtestRemovePromoteRight()
+    {
+        final IntegerComparator theComparator = new IntegerComparator();
+        BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
+        final int n = 1000;
+        LinkList<Integer> theIntegerList = LinkList.Nil;    // list will hold the inserted numbers
+
+        final Random random = new Random();
+        for(int i = 0; i < n; i += 1)
+        {
+            final Integer theRandomInt = random.nextInt();
+            theIntegerList = theIntegerList.insert(theRandomInt);
+            theBinaryTree = theBinaryTree.insert(theRandomInt, theComparator);
+        }
+
+        //
+        // Each number that we stashed in the list should also be in the tree.
+        //
+        for(LinkList<Integer> theList = theIntegerList.reverse(); theList != LinkList.Nil; theList = theList.tail)
+        {
+            final Integer theInteger = theList.head;
+            theBinaryTree = theBinaryTree.removePromoteRight(theInteger, theComparator);
+
+            //
+            // now recursively walk the tree to see if it is a valid binary search tree
+            //
+            assertIntegerBinarySearchTree(theBinaryTree);
+        }
+
+        assertTrue("tree should be empty.", BinaryTree.Nil == theBinaryTree);
+    }
+
+    @Test
+    public void testRandomtestRemovePromoteLeft()
+    {
+        final IntegerComparator theComparator = new IntegerComparator();
+        BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
+        final int n = 1000;
+        LinkList<Integer> theIntegerList = LinkList.Nil;    // list will hold the inserted numbers
+
+        final Random random = new Random();
+        for(int i = 0; i < n; i += 1)
+        {
+            final Integer theRandomInt = random.nextInt();
+            theIntegerList = theIntegerList.insert(theRandomInt);
+            theBinaryTree = theBinaryTree.insert(theRandomInt, theComparator);
+        }
+
+        //
+        // Each number that we stashed in the list should also be in the tree.
+        //
+        for(LinkList<Integer> theList = theIntegerList.reverse(); theList != LinkList.Nil; theList = theList.tail)
+        {
+            final Integer theInteger = theList.head;
+            theBinaryTree = theBinaryTree.removePromoteLeft(theInteger, theComparator);
+
+            //
+            // now recursively walk the tree to see if it is a valid binary search tree
+            //
+            assertIntegerBinarySearchTree(theBinaryTree);
+        }
+
+        assertTrue("tree should be empty.", BinaryTree.Nil == theBinaryTree);
+    }
+
+
 }

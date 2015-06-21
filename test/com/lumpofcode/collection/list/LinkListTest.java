@@ -1,7 +1,8 @@
 package com.lumpofcode.collection.list;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * Created by emurphy on 5/19/15.
@@ -97,7 +98,7 @@ public class LinkListTest
         final LinkList<String> listOfTwo = listOfOne.insert("two");
 
         assertTrue("Insert creates new list with new element in head.", listOfTwo.equals(new LinkList<>("two", new LinkList("one", LinkList.Nil))));
-        assertTrue("Inserting null returns the original list.", listOfTwo == listOfTwo.insert((String)null));
+        assertTrue("Inserting null returns the original list.", listOfTwo == listOfTwo.insert((String) null));
     }
 
     @Test
@@ -123,7 +124,7 @@ public class LinkListTest
 
         assertTrue("Append creates new list with another element added to the end of the tail.", listOfTwo.equals(new LinkList<>("two", new LinkList("one", LinkList.Nil))));
 
-        assertTrue("Appending null returns the original list.", listOfOne == listOfOne.append((String)null));
+        assertTrue("Appending null returns the original list.", listOfOne == listOfOne.append((String) null));
         assertTrue("Appending to Nil returns a list of the element.", LinkList.Nil.append("one").equals(new LinkList("one")));
     }
 
@@ -153,5 +154,20 @@ public class LinkListTest
         assertFalse("Lists of same elements in different order are not equal.", listOfTwo.equals(new LinkList<>("one", new LinkList("two", LinkList.Nil))));
     }
 
+    @Test
+    public void testReverse()
+    {
+        LinkList<String> list = new LinkList<>("two");
+        list = list.insert("one");
 
+        final LinkList<String> reverseList = list.reverse();
+
+        assertTrue("head is two.", reverseList.head.equals("two"));
+        assertTrue("tail is one.", reverseList.tail.head.equals("one"));
+        assertTrue("length is two.", reverseList.size() == 2);
+
+        assertTrue("reverse.reverse is not reversed.", list.equals(list.reverse().reverse()));
+
+        assertTrue("Nil reversed is Nil", LinkList.Nil == LinkList.Nil.reverse());
+    }
 }

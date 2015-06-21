@@ -1,14 +1,14 @@
 package com.lumpofcode.collection.binarytree;
 
-import com.lumpofcode.annotation.Immutable;
 import com.lumpofcode.annotation.NotNull;
 
 import java.util.Comparator;
 
 /**
+ * Persistent binary tree.
+ *
  * Created by emurphy on 6/14/15.
  */
-@Immutable
 public final class BinaryTree<T>
 {
     public final T value;
@@ -89,11 +89,8 @@ public final class BinaryTree<T>
     }
 
     /**
-     * Insert the value in a sorted order based on the given Comparator.
-     *
-     * NOTE: Duplicate values are not inserted again.
-     * If you want to avoid the memory allocations associated with
-     * this call when inserting a duplicate value, call find() first.
+     * Find the value in a sorted order based on the given Comparator.
+     * If it is found, update it.  If not found, insert it.
      *
      * @param value NotNull
      * @param comparator values that compare < 0 insert on left
@@ -101,19 +98,44 @@ public final class BinaryTree<T>
      */
     public BinaryTree<T> insert(final @NotNull T value, final @NotNull Comparator<T> comparator)
     {
-        // if value is null, don't insert it
-        if(null == value) return this;
+        if(null == value) throw new IllegalArgumentException();
+        if(null == comparator) throw new IllegalArgumentException();
 
         // inserting into Nil returns binary try with value and not children.
         if(this == Nil) return new BinaryTree<>(value, Nil, Nil);
 
         //
-        // if value is less than this node, recursively insert on left
+        // optimization: We only need to create new nodes if
+        //               we are actually adding or updating
+        //               a descendant node.
         //
+        // If we never added or updated a descendant node,
+        // then the recursive call to insertOrUpdate()
+        // will return the previous node instance.
+        //
+        // We can check for that to detect if the tree
+        // is changed or not.  If the tree is not changing
+        // then we can just return this node unchanged.
+        //
+
         final int comparison = comparator.compare(value, this.value);
         if(comparison < 0)
         {
-            return new BinaryTree<>(this.value, this.left.insert(value, comparator), this.right);
+            //
+            // the value is less than this node, recursively insert on left
+            //
+            // optimization: We only need to create new nodes if
+            //               we are actually adding or updating
+            //               a descendant node.
+            //
+            final BinaryTree<T> theLeft = this.left.insert(value, comparator);
+
+            //
+            // if the left changed then create a new node,
+            // else return this unchanged node.
+            //
+            if (this.left != theLeft) return new BinaryTree<>(this.value, theLeft, this.right);
+            return this;    // nothing actually changed.
         }
 
         //
@@ -121,13 +143,90 @@ public final class BinaryTree<T>
         //
         if(comparison > 0)
         {
-            return new BinaryTree<>(this.value, this.left, this.right.insert(value, comparator));
+            //
+            // if value is greater than this node, recursively insert on right
+            //
+            // optimization: We only need to create new nodes if
+            //               we are actually adding or updating
+            //               a descendant node.
+            //
+            final BinaryTree<T> theRight = this.right.insert(value, comparator);
+
+            //
+            // if right changed then create a new node,
+            // otherwise return this unchanged node
+            //
+            if (this.right != theRight) return new BinaryTree<>(this.value, this.left, theRight);
+            return this;    // nothing actually changed
         }
 
         //
         // value is the same as this node, so just return this node
         //
         return this;
+    }
+
+    /**
+     * Find and update the value based on the given Comparator.
+     * If the value is not found, the tree is not changed.
+     *
+     * @param value NotNull
+     * @param comparator values that compare < 0 insert on left
+     * @return a new tree
+     */
+    public BinaryTree<T> update(final @NotNull T value, final @NotNull Comparator<T> comparator)
+    {
+        if(null == value) throw new IllegalArgumentException();
+        if(null == comparator) throw new IllegalArgumentException();
+
+        // we did not find it, so there is nothing to update.
+        if(this == Nil) return this;
+
+        final int comparison = comparator.compare(value, this.value);
+        if(comparison < 0)
+        {
+            //
+            // the value is less than this node, recursively insert on left
+            //
+            // optimization: We only need to create new nodes if
+            //               we are actually adding or updating
+            //               a descendant node.
+            //
+            final BinaryTree<T> theLeft = this.left.update(value, comparator);
+
+            //
+            // if the left changed then create a new node,
+            // else return this unchanged node.
+            //
+            if (this.left != theLeft) return new BinaryTree<>(this.value, theLeft, this.right);
+            return this;    // nothing actually changed.
+        }
+
+        if(comparison > 0)
+        {
+            //
+            // if value is greater than this node, recursively insert on right
+            //
+            // optimization: We only need to create new nodes if
+            //               we are actually adding or updating
+            //               a descendant node.
+            //
+            final BinaryTree<T> theRight = this.right.update(value, comparator);
+
+            //
+            // if right changed then create a new node,
+            // otherwise return this unchanged node
+            //
+            if (this.right != theRight) return new BinaryTree<>(this.value, this.left, theRight);
+            return this;    // nothing actually changed
+        }
+
+        //
+        // if the value changed create a new node to hold it,
+        // else return this unchanged node
+        //
+        if (this.value != value) return new BinaryTree<>(value, this.left, this.right);
+        return this;    // nothing changed
     }
 
     /**
@@ -148,6 +247,9 @@ public final class BinaryTree<T>
      */
     public BinaryTree<T> removePromoteLeft(final @NotNull T value, final @NotNull Comparator<T> comparator)
     {
+        if(null == value) throw new IllegalArgumentException();
+        if(null == comparator) throw new IllegalArgumentException();
+
         //
         // find it, then fix up the tree
         //
@@ -181,6 +283,9 @@ public final class BinaryTree<T>
      */
     public BinaryTree<T> removePromoteRight(final @NotNull T value, final @NotNull Comparator<T> comparator)
     {
+        if(null == value) throw new IllegalArgumentException();
+        if(null == comparator) throw new IllegalArgumentException();
+
         //
         // find it, then fix up the tree
         //
@@ -200,6 +305,9 @@ public final class BinaryTree<T>
      * Insert the given tree as the left-most node.
      * This is used when rebalancing the tree.
      *
+     * Note: that this does not enforce the binary search tree
+     *       constraint, so the caller must do this if needed.
+     *
      * @param left NotNull
      * @return new binary tree with the given tree as the left-most node.
      */
@@ -217,6 +325,9 @@ public final class BinaryTree<T>
     /**
      * Insert the given tree as the right-most leaf node.
      * This is used when rebalancing the tree.
+     *
+     * Note: that this does not enforce the binary search tree
+     *       constraint, so the caller must do this if needed.
      *
      * @param right
      * @return new tree with right as the right-most leaf node.
@@ -250,7 +361,6 @@ public final class BinaryTree<T>
 
         //
         // left becomes new root.
-        // move the left's right to the left side of the right (!yes)
         //
         return new BinaryTree<>(
                 this.left.value,
@@ -275,7 +385,6 @@ public final class BinaryTree<T>
 
         //
         // right becomes new root.
-        // move the rights's left to the right side of the left (!yes)
         //
         return new BinaryTree<>(
                 this.right.value,

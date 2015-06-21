@@ -1,11 +1,9 @@
 package com.lumpofcode.collection.list;
 
-
-import com.lumpofcode.annotation.Immutable;
 import com.lumpofcode.annotation.NotNull;
 
 /**
- * Immutable linked list.
+ * Persistent linked list.
  *
  * The head is the value of the node.
  * The tail is a recursive set of LinkList nodes which ends
@@ -14,7 +12,6 @@ import com.lumpofcode.annotation.NotNull;
  * Created by emurphy on 4/20/15.
  *
  */
-@Immutable
 public final class LinkList<T>
 {
     public final T head;            // non-null value of this node
@@ -158,6 +155,12 @@ public final class LinkList<T>
         if (Nil == this) return list;
         if (Nil == tail) return new LinkList(head, list);   // optimization to avoid an extra recursive call
         return new LinkList<>(head, tail.append(list));
+    }
+
+    public LinkList<T> reverse()
+    {
+        if(this == Nil) return Nil;
+        return this.tail.reverse().append(this.head);
     }
 
     @Override
