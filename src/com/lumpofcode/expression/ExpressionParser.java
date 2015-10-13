@@ -42,6 +42,22 @@ import com.lumpofcode.utils.StringUtils;
 @Immutable
 public final class ExpressionParser
 {
+	public static final NullExpression nil = new NullExpression();
+
+	/**
+	 * Exception thrown by parse().
+	 */
+	public static class ParseException extends RuntimeException
+	{
+		public final int index;
+
+		public ParseException(final String theMessage, final int theIndex)
+		{
+			super(theMessage.replace("$index", String.valueOf(theIndex)));
+			this.index = theIndex;
+		}
+	}
+
 	/**
 	 * @author Ezward
 	 * 
@@ -201,45 +217,62 @@ public final class ExpressionParser
 	
 	/**
 	 * Parse the input string and generate a parse tree from it.
-	 * 
+	 *
+	 * The input is parsed completely; extra non-whitespace characters
+	 * that appear after a valid expression are treated as an error.
+	 *
 	 * @param theInput
-	 * @return an Expression tree
-	 * @throws RuntimeException if parsing fails.
-	 * 
+	 * @return an Expression tree.  This is ExpressionParser.nil if
+	 *         the input is empty or all whitespace.
+	 * @throws ParseException if parsing fails due to syntax error.
+	 * @throws NullPointerException if theInput is null.
+	 *
 	 */
-	public static Expression parse(final String theInput)
+	public static Expression parse(final String theInput) throws ParseException
 	{
-		if((null != theInput) && (theInput.length() > 0))
+		//
+		// otherwise there must be a valid expression
+		//
+		final Expression theExpression = innerParse(theInput);
+		if(StringUtils.scanWhitespace(theInput, theExpression.endIndex()) < theInput.length())
 		{
-			final int theLength = theInput.length();
-			if(theLength > 0)
-			{
-				final ExpressionNode theExpression = parseSum(theInput, 0);
-				
-				if(null != theExpression)
-				{
-					if(StringUtils.scanWhitespace(theInput, theExpression.endIndex()) < theLength)
-					{
-						// extra characters at end of input
-						throw new RuntimeException("Unexpected characters at index $i".replace("$i", String.valueOf(theExpression.endIndex())));
-					}
-					return theExpression;
-				}
-			}
+			// extra characters at end of input
+			throw new ParseException("Unexpected characters at index $index", theExpression.endIndex());
 		}
-		
-		return null;
+		return theExpression;
 	}
 
 	//
 	// *********** the private methods for parsing sub-Expressions from the input ***************
 	//
-	
+
+	private static Expression innerParse(final String theInput)
+	{
+		if(null == theInput)
+		{
+			throw new NullPointerException();
+		}
+
+		//
+		// if the input is empty, return the NullExpression
+		//
+		final int theStartIndex = StringUtils.scanWhitespace(theInput, 0);
+		if(theStartIndex >= theInput.length())
+		{
+			return nil;
+		}
+
+		//
+		// otherwise there must be a valid expression
+		//
+		return parseSum(theInput, theStartIndex);
+	}
+
 	private static ExpressionNode parseValue(final String theInput, final int theIndex)
 	{
 		final int theLength = theInput.length();
 		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);		
-		if(theStartIndex >= theLength) return null;	// unexpected end of input: expected sign, parenthesis or number.
+		if(theStartIndex >= theLength) throw new ParseException("Unexpected end of input at %index. Expected sign, parenthesis or number.", theStartIndex);	// unexpected end of input: expected sign, parenthesis or number.
 		
 		//
 		// parse the optional negation
@@ -252,24 +285,20 @@ public final class ExpressionParser
 			theExpressionIndex = theStartIndex + 1;	// skip the sign
 		}
 		
-		if(theExpressionIndex >= theLength) return null;	// unexpected end of input: expecting number or parenthesis
+		if(theExpressionIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a number or opening parenthesis", theExpressionIndex);	// unexpected end of input: expecting number or parenthesis
 		final char theChar = theInput.charAt(theExpressionIndex);
 		if('(' == theChar)
 		{
 			final ExpressionNode theAdditionExpression = parseSum(theInput, StringUtils.scanWhitespace(theInput, theExpressionIndex + 1));
-			if(null != theAdditionExpression)
+			final int theEndIndex = StringUtils.scanWhitespace(theInput, theAdditionExpression.endIndex());
+			if(theEndIndex >= theLength)
 			{
-				final int theEndIndex = StringUtils.scanWhitespace(theInput, theAdditionExpression.endIndex());
-				if(theEndIndex >= theLength)
-				{
-					throw new RuntimeException("Unexpected end of input.");
-				}
-				
-				if(')' != theInput.charAt(theEndIndex)) throw new RuntimeException("Expected closing parenthesis.");
-				
-				return new ParenthesisNode(theStartIndex, theEndIndex + 1, theSign, theAdditionExpression);
+				throw new ParseException("Unexpected end of input at $index while parsing a value.", theEndIndex);
 			}
 
+			if(')' != theInput.charAt(theEndIndex)) throw new ParseException("Unexpected character at $index.  Expected closing parenthesis.", theEndIndex);
+
+			return new ParenthesisNode(theStartIndex, theEndIndex + 1, theSign, theAdditionExpression);
 		}
 		else if(StringUtils.isDigit(theChar))
 		{
@@ -277,14 +306,14 @@ public final class ExpressionParser
 			return parseNumber(theInput, theStartIndex);
 		}
 			
-		throw new RuntimeException();	// Expected parenthesis or number.
+		throw new ParseException("Unexpected character at $index.  Expected parenthesis or number.", theExpressionIndex);	// Expected parenthesis or number.
 	}
 
 	private static ExpressionNode parseNumber(final String theInput, int theIndex)
 	{
 		final int theLength = theInput.length();
 		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);
-		if(theStartIndex >= theLength) return null;	// unexpected end of input: expected sign, parenthesis or number.
+		if(theStartIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a sign, opening parenthesis or a number.", theStartIndex);	// unexpected end of input: expected sign, parenthesis or number.
 
 		//
 		// parse the optional negation
@@ -297,8 +326,8 @@ public final class ExpressionParser
 			theExpressionIndex = theStartIndex + 1;	// skip the sign
 		}
 
-		if(theExpressionIndex >= theLength) throw new RuntimeException("Unexpected end of input; expected a digit.");
-		if(!StringUtils.isDigit(theInput.charAt(theExpressionIndex))) throw new RuntimeException("Unexpected character; expected a digit.");
+		if(theExpressionIndex >= theLength) throw new ParseException("Unexpected end of input at $index.  Expected a digit.", theExpressionIndex);
+		if(!StringUtils.isDigit(theInput.charAt(theExpressionIndex))) throw new ParseException("Unexpected character at $index. Expected a digit.", theExpressionIndex);
 
 		//
 		// scan the required integer part
@@ -318,12 +347,11 @@ public final class ExpressionParser
 			theEndIndex += 1;	// count the decimal
 
 			// scan the decimal part
-			if(theEndIndex >= theLength) throw new RuntimeException("Unexpected end of input; expected digit after decimal point.");
-			if(!StringUtils.isDigit(theInput.charAt(theEndIndex))) throw new RuntimeException("Unexpected character; expected digit after decimal point.");
+			if(theEndIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a digit after the decimal point.", theEndIndex);
+			if(!StringUtils.isDigit(theInput.charAt(theEndIndex))) throw new ParseException("Unexpected character at $index. Expected a digit after the decimal point.", theEndIndex);
 
 			theEndIndex = StringUtils.scanNumeric(theInput, theEndIndex);
 			theDecimalPart = theInput.substring(theDecimalIndex, theEndIndex);
-
 		}
 
 		//
@@ -336,8 +364,8 @@ public final class ExpressionParser
 			theEndIndex += 1;	// count the exponent char
 
 			// scan the exponent part
-			if(theEndIndex >= theLength) throw new RuntimeException("Unexpected end of input, expected digit after exponent character.");
-			if(!StringUtils.isDigit(theInput.charAt(theEndIndex))) throw new RuntimeException("Unexpected character; expected digit after exponent character.");
+			if(theEndIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a digit following the exponent character.", theEndIndex);
+			if(!StringUtils.isDigit(theInput.charAt(theEndIndex))) throw new ParseException("Unexpected character at $index. Expected a digit following the exponent character.", theEndIndex);
 
 			theEndIndex = StringUtils.scanNumeric(theInput, theEndIndex);
 			theExponentPart = theInput.substring(theExponentIndex, theEndIndex);
@@ -354,100 +382,136 @@ public final class ExpressionParser
 	private static ExpressionNode parseProduct(final String theInput, int theIndex)
 	{
 		final ExpressionNode theLeftExpression = parseValue(theInput, theIndex);
-		if(null != theLeftExpression)
+
+		final int theLength = theInput.length();
+		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
+		if(theOperatorIndex < theLength)
 		{
-			final int theLength = theInput.length();
-			int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
-			if(theOperatorIndex < theLength)
+			char theOperator = theInput.charAt(theOperatorIndex);
+			if(('*' == theOperator) || ('/' == theOperator))
 			{
-				char theOperator = theInput.charAt(theOperatorIndex);
-				if(('*' == theOperator) || ('/' == theOperator))
+				//
+				// collect sequential multiplications
+				//
+				RightExpressionNode theRightExpressions = null;
+				while(theOperatorIndex < theLength)
 				{
-					//
-					// collect sequential multiplications 
-					//
-					RightExpressionNode theRightExpressions = null;
-					while(theOperatorIndex < theLength)
-					{
-						theOperator = theInput.charAt(theOperatorIndex);
-						if(false == (('*' == theOperator) || ('x' == theOperator) || ('/' == theOperator))) break;
+					theOperator = theInput.charAt(theOperatorIndex);
+					if(false == (('*' == theOperator) || ('x' == theOperator) || ('/' == theOperator))) break;
 
-						// parse the right side
-						final ExpressionNode theRightExpression = parseValue(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
-						if(null == theRightExpression) throw new RuntimeException();	// error; we found operator, but no right side.  We should throw.
-						
-						// append to list of multiplications
-						final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
-						theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
+					// parse the right side
+					final ExpressionNode theRightExpression = parseValue(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
 
-						// skip trailing whitespace
-						theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
-					}
+					// append to list of multiplications
+					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
+					theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
 
-					final MultiplicationNode theMultiplicationExpression = new MultiplicationNode(theLeftExpression, theRightExpressions);
-					return theMultiplicationExpression;
+					// skip trailing whitespace
+					theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
 				}
-			}
-			
-			//
-			// only left side
-			//
-			return theLeftExpression;
-		}
-		
-		return null;
 
+				final MultiplicationNode theMultiplicationExpression = new MultiplicationNode(theLeftExpression, theRightExpressions);
+				return theMultiplicationExpression;
+			}
+		}
+
+		//
+		// only left side
+		//
+		return theLeftExpression;
 	}
 
 	private static ExpressionNode parseSum(final String theInput, int theIndex)
 	{
+		final ExpressionNode theLeftExpression = parseProduct(theInput, theIndex);
+
 		final int theLength = theInput.length();
-		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);
-		if(theStartIndex < theLength)
+		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
+		if(theOperatorIndex < theLength)
 		{
-			final ExpressionNode theLeftExpression = parseProduct(theInput, theStartIndex);
-			if(null != theLeftExpression)
+			char theOperator = theInput.charAt(theOperatorIndex);
+			if(('+' == theOperator) || ('-' == theOperator))
 			{
-				int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
-				if(theOperatorIndex < theLength)
+				//
+				// parse sequential additions
+				//
+				RightExpressionNode theRightExpressions = null;
+				while(theOperatorIndex < theLength)
 				{
-					char theOperator = theInput.charAt(theOperatorIndex);
-					if(('+' == theOperator) || ('-' == theOperator))
-					{
-						//
-						// parse sequential additions
-						//
-						RightExpressionNode theRightExpressions = null;
-						while(theOperatorIndex < theLength)
-						{
-							theOperator = theInput.charAt(theOperatorIndex);
-							if(false == (('+' == theOperator) || ('-' == theOperator))) break;
+					theOperator = theInput.charAt(theOperatorIndex);
+					if(false == (('+' == theOperator) || ('-' == theOperator))) break;
 
-							// parse the right side
-							final ExpressionNode theRightExpression = parseProduct(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
-							if(null == theRightExpression) throw new RuntimeException();	// TODO: create ParseException(theInput, theStartIndex, theEndIndex, theMessage);
-							
-							// append to list of additions
-							final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
-							theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
+					// parse the right side
+					final ExpressionNode theRightExpression = parseProduct(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
 
-							// skip to past the trailing whitespace
-							theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
-						}
-						final AdditionNode theAdditionExpression = new AdditionNode(theLeftExpression, theRightExpressions);
-						return theAdditionExpression;
-					}
+					// append to list of additions
+					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
+					theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
+
+					// skip to past the trailing whitespace
+					theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
 				}
-				
-				//
-				// only left side
-				//
-				return theLeftExpression;
+
+				final AdditionNode theAdditionExpression = new AdditionNode(theLeftExpression, theRightExpressions);
+				return theAdditionExpression;
 			}
 		}
-		
-		return null;
 
+		//
+		// only left side
+		//
+		return theLeftExpression;
+	}
+
+	public final static class NullExpression implements Expression
+	{
+		@Override
+		public double evaluate()
+		{
+			return Double.NaN;
+		}
+
+		@Override
+		public String format()
+		{
+			return "";
+		}
+
+		@Override
+		public void format(StringBuilder theBuilder)
+		{
+			return;
+		}
+
+		@Override
+		public String formatFullParenthesis()
+		{
+			return "";
+		}
+
+		@Override
+		public void formatFullParenthesis(StringBuilder theBuilder)
+		{
+			return;
+		}
+
+		@Override
+		public int startIndex()
+		{
+			return 0;
+		}
+
+		@Override
+		public int endIndex()
+		{
+			return 0;
+		}
+
+		@Override
+		public void step(EvaluationContext theContext)
+		{
+			return;
+		}
 	}
 	
 	

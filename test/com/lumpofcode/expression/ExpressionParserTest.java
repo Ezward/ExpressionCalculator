@@ -10,7 +10,7 @@ public class ExpressionParserTest
 	public void testParseEmpty()
 	{
 		final ExpressionParser.Expression theExpression = ExpressionParser.parse("");
-		assertNull(theExpression);
+		assertTrue(ExpressionParser.nil == theExpression);
 	}
 
 	@Test
@@ -31,6 +31,21 @@ public class ExpressionParserTest
 		theBuilder = new StringBuilder();
 		theNegativeExpression.format(theBuilder);
 		assertEquals("-123", theBuilder.toString());
+
+		try
+		{
+			// extra decimal point, invalid number
+			ExpressionParser.parse("1.2.3");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
 
 	}
 	
@@ -68,6 +83,21 @@ public class ExpressionParserTest
 		theBuilder = new StringBuilder();
 		theExpression.format(theBuilder);
 		assertEquals("1 + 2 + 3 + 4 + 5", theBuilder.toString());
+
+		try
+		{
+			// hanging addition
+			ExpressionParser.parse("1 + 2 +");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
 	}
 
 	@Test
@@ -104,6 +134,21 @@ public class ExpressionParserTest
 		theBuilder = new StringBuilder();
 		theExpression.format(theBuilder);
 		assertEquals("5 - 4 - 3 - 2 - 1", theBuilder.toString());
+
+		try
+		{
+			// hanging subtraction
+			ExpressionParser.parse("1 - 2 -");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
 	}
 	
 	@Test
@@ -140,7 +185,21 @@ public class ExpressionParserTest
 		theBuilder = new StringBuilder();
 		theExpression.format(theBuilder);
 		assertEquals("1 * 2 * 3 * 4 * 5", theBuilder.toString());
-		
+
+		try
+		{
+			// hanging multiplication
+			ExpressionParser.parse("1 * 2 *");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
 	}
 	
 	@Test
@@ -178,6 +237,20 @@ public class ExpressionParserTest
 		theExpression.format(theBuilder);
 		assertEquals("24 / 4 / 3 / 2 / 1", theBuilder.toString());
 
+		try
+		{
+			// hanging division
+			ExpressionParser.parse("1 / 2 /");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
 	}
 	
 	@Test
@@ -206,6 +279,22 @@ public class ExpressionParserTest
 		theBuilder = new StringBuilder();
 		theExpression.format(theBuilder);
 		assertEquals("-(((10 + 5) * 6) - 20 / 2 * 3 + 100 - 50)", theBuilder.toString());
+
+		try
+		{
+			// unclosed parenthesis
+			ExpressionParser.parse("(1 - 2");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
+
 	}
 
 	@Test
