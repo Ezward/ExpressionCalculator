@@ -463,7 +463,7 @@ public final class ExpressionParser
 		return theLeftExpression;
 	}
 
-	public final static class NullExpression implements Expression
+	private final static class NullExpression implements Expression
 	{
 		@Override
 		public double evaluate()
