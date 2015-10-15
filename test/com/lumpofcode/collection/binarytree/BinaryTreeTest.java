@@ -91,7 +91,7 @@ public class BinaryTreeTest
         //
         final IntegerComparator theComparator = new IntegerComparator();
         BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
-        final int n = 1000;
+        final int n = 10000;
 
         final Random random = new Random();
         for(int i = 0; i < n; i += 1)
@@ -128,7 +128,7 @@ public class BinaryTreeTest
     {
         final IntegerComparator theComparator = new IntegerComparator();
         BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
-        final int n = 1000;
+        final int n = 10000;
         LinkList<Integer> theIntegerList = LinkList.Nil;    // list will hold the inserted numbers
 
         final Random random = new Random();
@@ -363,7 +363,7 @@ public class BinaryTreeTest
     {
         final IntegerComparator theComparator = new IntegerComparator();
         BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
-        final int n = 1000;
+        final int n = 10000;
         LinkList<Integer> theIntegerList = LinkList.Nil;    // list will hold the inserted numbers
 
         final Random random = new Random();
@@ -396,7 +396,7 @@ public class BinaryTreeTest
     {
         final IntegerComparator theComparator = new IntegerComparator();
         BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
-        final int n = 1000;
+        final int n = 10000;
         LinkList<Integer> theIntegerList = LinkList.Nil;    // list will hold the inserted numbers
 
         final Random random = new Random();

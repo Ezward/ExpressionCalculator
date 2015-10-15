@@ -32,7 +32,7 @@ public class LinkListTest
         try
         {
             new LinkList("foo", null);
-            fail("Passing null for tail should throw");
+            fail("Passing null for tail should throw an IllegalArgumentException");
         }
         catch(IllegalArgumentException e)
         {
@@ -111,9 +111,25 @@ public class LinkListTest
         assertTrue("Insert creates new list with another list before it.", listOfTwo.equals(new LinkList<>("two", new LinkList("one", LinkList.Nil))));
         assertTrue("Insert creates new list with another list before it.", listOfThree.equals(new LinkList<>("three", new LinkList<>("two", new LinkList("one", LinkList.Nil)))));
 
-        assertTrue("Inserting null returns the original list.", listOfThree == listOfThree.insert((LinkList)null));
         assertTrue("Inserting Nil returns the original list.", listOfThree == listOfThree.insert(LinkList.Nil));
         assertTrue("Inserting into Nil returns inserted list.", listOfThree == LinkList.Nil.insert(listOfThree));
+
+        //
+        // attempt to insert null throws IllegalArgumentException
+        //
+        try
+        {
+            listOfThree.insert((LinkList)null);
+            fail("Expected an IllegalArgumentException.");
+        }
+        catch(IllegalArgumentException e)
+        {
+            assert(true);
+        }
+        catch(Exception e)
+        {
+            fail("Unexpected Exception.");
+        }
     }
 
     @Test
@@ -124,8 +140,8 @@ public class LinkListTest
 
         assertTrue("Append creates new list with another element added to the end of the tail.", listOfTwo.equals(new LinkList<>("two", new LinkList("one", LinkList.Nil))));
 
-        assertTrue("Appending null returns the original list.", listOfOne == listOfOne.append((String) null));
         assertTrue("Appending to Nil returns a list of the element.", LinkList.Nil.append("one").equals(new LinkList("one")));
+
     }
 
     @Test
@@ -138,9 +154,25 @@ public class LinkListTest
         assertTrue("Append creates new list with another list added to the end of the tail.", listOfTwo.equals(new LinkList<>("three", new LinkList("two", LinkList.Nil))));
         assertTrue("Append creates new list with another list added to the end of the tail.", listOfThree.equals(new LinkList<>("three", new LinkList("two", new LinkList("one", LinkList.Nil)))));
 
-        assertTrue("Appending null returns the original list.", listOfThree == listOfThree.append((LinkList)null));
         assertTrue("Appending Nil returns the original list.", listOfThree == listOfThree.append(LinkList.Nil));
         assertTrue("Appending to Nil returns the appended list.", listOfThree == LinkList.Nil.append(listOfThree));
+
+        //
+        // attempt to append null throws IllegalArgumentException
+        //
+        try
+        {
+            listOfThree.append((LinkList)null);
+            fail("Expected an IllegalArgumentException.");
+        }
+        catch(IllegalArgumentException e)
+        {
+            assert(true);
+        }
+        catch(Exception e)
+        {
+            fail("Unexpected Exception.");
+        }
     }
 
     @Test

@@ -250,15 +250,12 @@ public final class BinaryTree<T>
         if(null == value) throw new IllegalArgumentException();
         if(null == comparator) throw new IllegalArgumentException();
 
-        //
-        // find it, then fix up the tree
-        //
-        if(null == value) throw new IllegalArgumentException();
-        if(null == comparator) throw new IllegalArgumentException();
-
         // if we are at a Nil node, we did not find the value
         if(this == Nil) return Nil;
 
+        //
+        // find it, then fix up the tree
+        //
         final int comparison = comparator.compare(value, this.value);
         if(comparison < 0) return new BinaryTree<>(this.value, this.left.removePromoteLeft(value, comparator), this.right);
         if(comparison > 0) return new BinaryTree<>(this.value, this.left, this.right.removePromoteLeft(value, comparator));
@@ -286,15 +283,12 @@ public final class BinaryTree<T>
         if(null == value) throw new IllegalArgumentException();
         if(null == comparator) throw new IllegalArgumentException();
 
-        //
-        // find it, then fix up the tree
-        //
-        if(null == value) throw new IllegalArgumentException();
-        if(null == comparator) throw new IllegalArgumentException();
-
         // if we are at a Nil node, we did not find the value
         if(this == Nil) return Nil;
 
+        //
+        // find it, then fix up the tree
+        //
         final int comparison = comparator.compare(value, this.value);
         if(comparison < 0) return new BinaryTree<>(this.value, this.left.removePromoteRight(value, comparator), this.right);
         if(comparison > 0) return new BinaryTree<>(this.value, this.left, this.right.removePromoteRight(value, comparator));

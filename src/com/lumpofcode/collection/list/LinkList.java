@@ -125,7 +125,8 @@ public final class LinkList<T>
      */
     public LinkList<T> insert(final LinkList<T> list)
     {
-        if (null == list) return this;
+        if (null == list) throw new IllegalArgumentException();
+
         return list.append(this); // reverse the order to turn this into an append
     }
 
@@ -137,7 +138,8 @@ public final class LinkList<T>
      */
     public LinkList<T> append(final T element)
     {
-        if (null == element) return this;
+        if (null == element) throw new IllegalArgumentException();
+
         if (Nil == this) return new LinkList(element);
         return new LinkList(head, tail.append(element));
     }
@@ -150,7 +152,8 @@ public final class LinkList<T>
      */
     public LinkList<T> append(final LinkList<T> list)
     {
-        if (null == list) return this;
+        if (null == list) throw new IllegalArgumentException();
+
         if (Nil == list) return this;
         if (Nil == this) return list;
         if (Nil == tail) return new LinkList(head, list);   // optimization to avoid an extra recursive call
