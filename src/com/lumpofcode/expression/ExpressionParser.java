@@ -175,7 +175,7 @@ public final class ExpressionParser
 	 */
 	public interface RightExpression extends Expression
 	{
-		char operator();
+		String operator();
 		Expression expression();
 		RightExpression next();
 	}
@@ -403,7 +403,7 @@ public final class ExpressionParser
 					final ExpressionNode theRightExpression = parseValue(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
 
 					// append to list of multiplications
-					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
+					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, String.valueOf(theOperator), theRightExpression);
 					theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
 
 					// skip trailing whitespace
@@ -445,7 +445,7 @@ public final class ExpressionParser
 					final ExpressionNode theRightExpression = parseProduct(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
 
 					// append to list of additions
-					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, theOperator, theRightExpression);
+					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, String.valueOf(theOperator), theRightExpression);
 					theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
 
 					// skip to past the trailing whitespace
@@ -629,11 +629,11 @@ public final class ExpressionParser
 			double theLeftValue = thisLeft.evaluate();
 			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				if('+' == theRight.operator())
+				if("+".equals(theRight.operator()))
 				{
 					theLeftValue += theRight.evaluate();
 				}
-				else if('-' == theRight.operator())
+				else if("-".equals(theRight.operator()))
 				{
 					theLeftValue -= theRight.evaluate();
 				}
@@ -667,11 +667,11 @@ public final class ExpressionParser
 	@Immutable
 	private static final class RightExpressionNode extends ExpressionNode implements RightExpression
 	{
-		private final char thisOperator;
+		private final String thisOperator;
 		private final ExpressionNode thisExpression;
 		private final RightExpressionNode thisNext;
 
-		public RightExpressionNode(final int theStartIndex, final char theOperator, final ExpressionNode theRight, final RightExpressionNode theNext)
+		public RightExpressionNode(final int theStartIndex, final String theOperator, final ExpressionNode theRight, final RightExpressionNode theNext)
 		{
 			super(theStartIndex, theRight.endIndex());
 
@@ -682,13 +682,13 @@ public final class ExpressionParser
 			thisNext = theNext;
 		}
 
-		public RightExpressionNode(final int theStartIndex, final char theOperator, final ExpressionNode theRight)
+		public RightExpressionNode(final int theStartIndex, final String theOperator, final ExpressionNode theRight)
 		{
 			this(theStartIndex, theOperator, theRight, null);
 		}
 
 		@Override
-		public char operator() { return thisOperator; }
+		public String operator() { return thisOperator; }
 		
 		@Override
 		public ExpressionNode expression() { return thisExpression; }
@@ -842,11 +842,11 @@ public final class ExpressionParser
 			double theLeftValue = thisLeft.evaluate();
 			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
 			{
-				if('/' == theRight.operator())
+				if("/".equals(theRight.operator()))
 				{
 					theLeftValue /= theRight.evaluate();
 				}
-				else if('*' == theRight.operator())
+				else if("*".equals(theRight.operator()))
 				{
 					theLeftValue *= theRight.evaluate();
 				}
