@@ -217,7 +217,7 @@ public final class ExpressionParser
 	/**
 	 * @author Ezward
 	 *
-	 * A series of chained additions and/or subtractions.
+	 * An exponentiation; value ^ value.
 	 *
 	 */
 	public interface PowerExpression extends Expression
