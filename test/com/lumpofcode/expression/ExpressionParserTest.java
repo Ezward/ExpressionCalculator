@@ -318,6 +318,33 @@ public class ExpressionParserTest
 	}
 
 	@Test
+	public void testParseExponentiation()
+	{
+		ExpressionParser.Expression theExpression = ExpressionParser.parse("2.0^3.0");
+		assertNotNull(theExpression);
+
+		assertTrue(8.0 == theExpression.evaluate());
+
+		theExpression = ExpressionParser.parse(" 1 + 5 ^ 2 * 10");
+		assertNotNull(theExpression);
+
+		assertTrue(251 == theExpression.evaluate());
+		assertEquals("1 + 5^2 * 10", theExpression.format());
+		assertEquals("(1 + ((5^2) * 10))", theExpression.formatFullParenthesis());
+
+		//
+		// negative exponents result in inverse
+		//
+		theExpression = ExpressionParser.parse(" 1 + 10^-2 * 5 ");
+		assertNotNull(theExpression);
+
+		assertTrue(1.05 == theExpression.evaluate());
+		assertEquals("1 + 10^-2 * 5", theExpression.format());
+		assertEquals("(1 + ((10^-2) * 5))", theExpression.formatFullParenthesis());
+
+	}
+
+	@Test
 	public void testFormatFullParenthesis()
 	{
 		ExpressionParser.Expression theExpression = ExpressionParser.parse(" 10 + 5 * -6 - -20 / -2 * 3 + -100 - 50 ");

@@ -21,6 +21,7 @@ public final class EvaluationOperation
         if("-".equals(theOperator)) return Subtraction;
         if("*".equals(theOperator)) return Mulitplication;
         if("/".equals(theOperator)) return Division;
+        if("^".equals(theOperator)) return Exponentiation;
         throw new IllegalStateException("Invalid binary operator ($operator).".replace("$operator", (null != theOperator) ? theOperator : "null"));
     }
 
@@ -106,6 +107,24 @@ public final class EvaluationOperation
             final Double theSecondOperand = theContext.popValue();
             final Double theFirstOperand = theContext.popValue();
             theContext.pushValue(theFirstOperand / theSecondOperand);
+        }
+    };
+
+    /**
+     * Singleton to raise a value to a power (exponentiation)
+     */
+    public static final EvaluationStep Exponentiation = new EvaluationStep()
+    {
+        @Override
+        public void step(EvaluationContext theContext)
+        {
+            //
+            // pop the top 2 values and do a power calculation
+            // and push the result onto the value stack
+            //
+            final Double theSecondOperand = theContext.popValue();
+            final Double theFirstOperand = theContext.popValue();
+            theContext.pushValue(Math.pow(theFirstOperand, theSecondOperand));
         }
     };
 

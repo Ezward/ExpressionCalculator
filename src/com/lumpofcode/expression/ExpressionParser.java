@@ -17,7 +17,8 @@ import com.lumpofcode.utils.StringUtils;
  * number ::= [integer | decimal | scientific]
  * parenthesis ::= {sign} '(' expression ')'
  * value ::= [parenthesis | number ]
- * product ::= value {[ '*' | '/' ] value}*
+ * power ::= value{'^'value}
+ * product ::= power {[ '*' | '/' ] power}*
  * sum ::= product  {['+' | '-'] product}*
  * expression ::= sum
  * 
@@ -35,7 +36,7 @@ import com.lumpofcode.utils.StringUtils;
  * 
  * DONE: support stack-based evaluation (rather than recursive evaluation)
  * DONE: support decimal numbers.
- * TODO: support exponential and root operators;
+ * DONE: support exponential operator;
  * TODO: support variables and a context for evaluation; Expression.evaluate(ExpressionContext theContext);
  * TODO: support functions
  */
@@ -212,7 +213,19 @@ public final class ExpressionParser
 	public interface AdditionExpression extends ChainedExpression
 	{
 	}
-	
+
+	/**
+	 * @author Ezward
+	 *
+	 * A series of chained additions and/or subtractions.
+	 *
+	 */
+	public interface PowerExpression extends Expression
+	{
+		ExpressionNode base();
+		ExpressionNode exponent();
+	}
+
 	private ExpressionParser() {}	// private class to enforce singleton
 	
 	/**
@@ -379,9 +392,35 @@ public final class ExpressionParser
 		return new NumberNode(theStartIndex, theEndIndex, theInput.substring(theStartIndex, theEndIndex), isInteger);
 	}
 
-	private static ExpressionNode parseProduct(final String theInput, int theIndex)
+	private static ExpressionNode parsePower(final String theInput, int theIndex)
 	{
 		final ExpressionNode theLeftExpression = parseValue(theInput, theIndex);
+
+		final int theLength = theInput.length();
+		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
+		if(theOperatorIndex < theLength)
+		{
+			char theOperator = theInput.charAt(theOperatorIndex);
+			if('^' == theOperator)
+			{
+				// parse the right side
+				final ExpressionNode theRightExpression = parseValue(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
+
+				final PowerNode thePowerExpression = new PowerNode(theLeftExpression, theRightExpression);
+				return thePowerExpression;
+			}
+		}
+
+		//
+		// only left side
+		//
+		return theLeftExpression;
+	}
+
+
+	private static ExpressionNode parseProduct(final String theInput, int theIndex)
+	{
+		final ExpressionNode theLeftExpression = parsePower(theInput, theIndex);
 
 		final int theLength = theInput.length();
 		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
@@ -400,7 +439,7 @@ public final class ExpressionParser
 					if(false == (('*' == theOperator) || ('x' == theOperator) || ('/' == theOperator))) break;
 
 					// parse the right side
-					final ExpressionNode theRightExpression = parseValue(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
+					final ExpressionNode theRightExpression = parsePower(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
 
 					// append to list of multiplications
 					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, String.valueOf(theOperator), theRightExpression);
@@ -956,6 +995,71 @@ public final class ExpressionParser
 			//
 			if(!thisSign) theContext.pushEvaluationStep(EvaluationOperation.Negation);
 			theContext.pushEvaluationStep(thisInnerExpression);
+		}
+	}
+
+	/**
+	 * Immutable expression node for a number.
+	 */
+	@Immutable
+	private static final class PowerNode extends ExpressionNode implements PowerExpression
+	{
+		private final ExpressionNode thisBase;
+		private final ExpressionNode thisExponent;
+
+		public PowerNode(final ExpressionNode theBase, final ExpressionNode theExponent)
+		{
+			super(theBase.startIndex(), theExponent.endIndex());
+
+			thisBase = theBase;
+			thisExponent = theExponent;
+		}
+
+		@Override
+		public ExpressionNode base() { return thisBase; }
+
+		@Override
+		public ExpressionNode exponent() { return thisExponent; }
+
+		@Override
+		public void format(StringBuilder theBuilder)
+		{
+			thisBase.format(theBuilder);
+			theBuilder.append('^');
+			thisExponent.format(theBuilder);
+		}
+
+		@Override
+		public void formatFullParenthesis(StringBuilder theBuilder)
+		{
+			theBuilder.append('(');
+			format(theBuilder);
+			theBuilder.append(')');
+		}
+
+		@Override
+		public double evaluate()
+		{
+			final Double theBase = thisBase.evaluate();
+			final Double theExponent = thisExponent.evaluate();
+			return Math.pow(theBase, theExponent);
+		}
+
+		/**
+		 * Execute one step in the interpretation of this expression
+		 * Using the given context.
+		 *
+		 * @param theContext
+		 */
+		@Override
+		public void step(final EvaluationContext theContext)
+		{
+			//
+			// push the operation and the arguments onto the stack.
+			//
+			theContext.pushEvaluationStep(EvaluationOperation.Exponentiation);
+			theContext.pushEvaluationStep(thisExponent);
+			theContext.pushEvaluationStep(thisBase);
 		}
 	}
 

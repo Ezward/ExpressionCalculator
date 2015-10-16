@@ -69,6 +69,15 @@ public class ExpressionEvaluatorTest
     }
 
     @Test
+    public void testEvaluateExponentiation()
+    {
+        assertTrue(8 == new ExpressionEvaluator(ExpressionParser.parse("2.0^3.0")).evaluate());
+        assertTrue(0.01 == new ExpressionEvaluator(ExpressionParser.parse("10^-2")).evaluate());
+        assertTrue(251 == new ExpressionEvaluator(ExpressionParser.parse("1 + 5^2 * 10")).evaluate());
+        assertTrue(1.05 == new ExpressionEvaluator(ExpressionParser.parse("1 + 10^-2 * 5")).evaluate());
+    }
+
+    @Test
     public void testEvaluateParenthesis()
     {
         assertTrue(100 == new ExpressionEvaluator(ExpressionParser.parse("(100) ")).evaluate());
