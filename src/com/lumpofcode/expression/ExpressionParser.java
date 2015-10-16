@@ -222,8 +222,8 @@ public final class ExpressionParser
 	 */
 	public interface PowerExpression extends Expression
 	{
-		ExpressionNode base();
-		ExpressionNode exponent();
+		Expression base();
+		Expression exponent();
 	}
 
 	private ExpressionParser() {}	// private class to enforce singleton
