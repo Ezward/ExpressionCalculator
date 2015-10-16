@@ -246,7 +246,7 @@ public final class ExpressionParser
 		//
 		// otherwise there must be a valid expression
 		//
-		final Expression theExpression = innerParse(theInput);
+		final Expression theExpression = innerParse(theInput, 0);
 		if(StringUtils.scanWhitespace(theInput, theExpression.endIndex()) < theInput.length())
 		{
 			// extra characters at end of input
@@ -259,7 +259,19 @@ public final class ExpressionParser
 	// *********** the private methods for parsing sub-Expressions from the input ***************
 	//
 
-	private static Expression innerParse(final String theInput)
+	/**
+	 * Parse an expression starting at the given index, until a complete
+	 * expression is parsed.
+	 * This ignores any characters after the expression.
+	 *
+	 * @param theInput the buffer to parse
+	 * @param theIndex the character offset that parsing should start at
+	 * @return an Expression tree.  This is ExpressionParser.nil if
+	 *         the input is empty or all whitespace.
+	 * @throws ParseException if parsing fails due to syntax error.
+	 * @throws NullPointerException if theInput is null.
+	 */
+	private static Expression innerParse(final String theInput, final int theIndex )
 	{
 		if(null == theInput)
 		{
@@ -269,7 +281,7 @@ public final class ExpressionParser
 		//
 		// if the input is empty, return the NullExpression
 		//
-		final int theStartIndex = StringUtils.scanWhitespace(theInput, 0);
+		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);
 		if(theStartIndex >= theInput.length())
 		{
 			return nil;
