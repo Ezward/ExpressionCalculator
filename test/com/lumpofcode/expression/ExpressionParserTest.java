@@ -342,6 +342,18 @@ public class ExpressionParserTest
 		assertEquals("1 + 10^-2 * 5", theExpression.format());
 		assertEquals("(1 + ((10^-2) * 5))", theExpression.formatFullParenthesis());
 
+		//
+		// exponents that are expressions
+		//
+		theExpression = ExpressionParser.parse(" 1 + 10^(2 * 3) * 5");
+		assertNotNull(theExpression);
+
+		System.out.println(theExpression.evaluate());
+
+		assertTrue(5000001 == theExpression.evaluate());
+		assertEquals("1 + 10^(2 * 3) * 5", theExpression.format());
+		assertEquals("(1 + ((10^(2 * 3)) * 5))", theExpression.formatFullParenthesis());
+
 	}
 
 	@Test
