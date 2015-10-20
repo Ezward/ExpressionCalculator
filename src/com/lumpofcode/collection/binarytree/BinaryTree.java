@@ -3,6 +3,7 @@ package com.lumpofcode.collection.binarytree;
 import com.lumpofcode.annotation.NotNull;
 
 import java.util.Comparator;
+import java.util.function.Function;
 
 /**
  * Persistent binary tree.
@@ -385,4 +386,42 @@ public final class BinaryTree<T>
                 this.left.insertRight(this.right.left),
                 this.right.right);
     }
+
+    /**
+     * Map the elements of the tree and produce a new tree
+     * with the same structure, but with elements mapped from T to R
+     *
+     * NOTE: if the original tree was ordered with a Comparator and
+     *       so would be a binary search tree, the resuting tree
+     *       may no longer be a search tree.  The elements will be
+     *       in the same order as the original elements, but
+     *       because the type has changed, search order may not
+     *       be conserved.
+     *
+     * @param mapper function that maps a T to an R
+     * @param <R> the return type of the elements
+     * @return tree with same structure but elements mapped from T to R
+     */
+    <R> BinaryTree<R> map(Function<? super T, ? extends R> mapper)
+    {
+        if(this == Nil) return Nil;
+        return new BinaryTree<>(mapper.apply(this.value), left.map(mapper), right.map(mapper));
+    }
+
+    /**
+     * Determine if two trees are equal.
+     * Two trees are equal if they have the same structure
+     * and all elements are equal.
+     *
+     * @param that the tree to test against this for equality
+     * @return true of all elements are in the same order and are equal
+     */
+    public boolean isEqual(BinaryTree<T> that)
+    {
+        if(this == Nil) return that == Nil;
+        return this.value.equals(that.value)
+               && this.left.isEqual(that.left)
+               && this.right.isEqual(that.right);
+    }
+
 }

@@ -1,6 +1,9 @@
 package com.lumpofcode.collection.binarytree;
 
 import com.lumpofcode.collection.compare.IntegerComparator;
+import com.lumpofcode.collection.compare.IntegerStringComparator;
+import com.lumpofcode.collection.compare.StringComparator;
+import com.lumpofcode.collection.compare.ObjectComparator;
 import com.lumpofcode.collection.list.LinkList;
 import org.junit.Test;
 
@@ -424,5 +427,42 @@ public class BinaryTreeTest
         assertTrue("tree should be empty.", BinaryTree.Nil == theBinaryTree);
     }
 
+    @Test
+    public void testMap()
+    {
+        //
+        // insert 1000 random integers.
+        // then check that the tree is a valid binary search tree
+        //
+        final IntegerComparator theComparator = new IntegerComparator();
+        BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
+        final int n = 1000;
 
+        final Random random = new Random();
+        for(int i = 0; i < n; i += 1)
+        {
+            final int theRandomInt = random.nextInt();
+            theBinaryTree = theBinaryTree.insert(theRandomInt, theComparator);
+        }
+
+        //
+        // the mapped tree will have the same structure,
+        // but elements mapped from Integer to String.
+        //
+        final BinaryTree<String> theMappedTree = theBinaryTree.map((x) -> String.valueOf(x));
+
+        //
+        // now recursively walk the tree to see if it is a valid binary search tree.
+        // we use a comparator that takes the integer strings can compares them as numbers.
+        //
+        assertBinarySearchTree(theMappedTree, new IntegerStringComparator());
+
+        //
+        // reconvert the mapped tree back to the Integer and see
+        // if it is equal to the original tree.
+        final BinaryTree<Integer> theReformedTree = theMappedTree.map((x) -> Integer.valueOf(x));
+
+        assertTrue("Original tree and remapped tree should be the same.", theBinaryTree.isEqual(theReformedTree));
+
+    }
 }
