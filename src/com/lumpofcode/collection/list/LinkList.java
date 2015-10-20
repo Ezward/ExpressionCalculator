@@ -2,6 +2,8 @@ package com.lumpofcode.collection.list;
 
 import com.lumpofcode.annotation.NotNull;
 
+import java.util.function.Function;
+
 /**
  * Persistent linked list.
  *
@@ -160,10 +162,29 @@ public final class LinkList<T>
         return new LinkList<>(head, tail.append(list));
     }
 
+    /**
+     * Reverse the elements of the list.
+     *
+     * @return a list with the element order reversed.
+     */
     public LinkList<T> reverse()
     {
         if(this == Nil) return Nil;
         return this.tail.reverse().append(this.head);
+    }
+
+    /**
+     * Map the values in the list using the mapper function
+     * and return a new list.
+     *
+     * @param mapper function that maps a T to an R
+     * @param <R> the result type
+     * @return list of elements mapped from T to R
+     */
+    <R> LinkList<R> map(Function<? super T, ? extends R> mapper)
+    {
+        if(this == Nil) return Nil;
+        return new LinkList<>(mapper.apply(head), tail.map(mapper));
     }
 
     @Override

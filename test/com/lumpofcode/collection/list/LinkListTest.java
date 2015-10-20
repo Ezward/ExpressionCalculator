@@ -202,4 +202,17 @@ public class LinkListTest
 
         assertTrue("Nil reversed is Nil", LinkList.Nil == LinkList.Nil.reverse());
     }
+
+    @Test public void testMap()
+    {
+        LinkList<Integer> list = new LinkList<>(1).append(2).append(3);
+
+        LinkList<String> mappedList = list.map((x) -> String.valueOf(x + x));
+
+        assertTrue("head is 2", "2".equals(mappedList.head));
+        assertTrue("next is 4", "4".equals(mappedList.tail.head));
+        assertTrue("tail is 6", "6".equals(mappedList.tail.tail.head));
+
+        assertTrue("Nil is Nil", LinkList.Nil == LinkList.Nil.map((x) -> String.valueOf(x)));
+    }
 }
