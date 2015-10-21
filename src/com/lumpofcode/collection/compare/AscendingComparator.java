@@ -5,7 +5,7 @@ import java.util.Comparator;
 /**
  * Created by emurphy on 10/20/15.
  */
-public class ObjectComparator implements Comparator<Comparable<Object>>
+public class AscendingComparator implements Comparator<Comparable<Object>>
 {
     @Override
     public int compare(Comparable<Object> theValue, Comparable<Object> theOtherValue)

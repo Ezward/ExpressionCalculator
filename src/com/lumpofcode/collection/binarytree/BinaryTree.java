@@ -3,7 +3,6 @@ package com.lumpofcode.collection.binarytree;
 import com.lumpofcode.annotation.NotNull;
 
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.function.Function;
 
 /**
@@ -76,7 +75,7 @@ public final class BinaryTree<T>
      * @param comparator
      * @return the node with the value or Nil if not found.
      */
-    public BinaryTree<T> find(final @NotNull T value, final @NotNull Comparator<T> comparator)
+    public BinaryTree<T> find(final @NotNull T value, final @NotNull Comparator comparator)
     {
         if(null == value) throw new IllegalArgumentException();
         if(null == comparator) throw new IllegalArgumentException();
@@ -98,7 +97,7 @@ public final class BinaryTree<T>
      * @param comparator values that compare < 0 insert on left
      * @return a new tree
      */
-    public BinaryTree<T> insert(final @NotNull T value, final @NotNull Comparator<T> comparator)
+    public BinaryTree<T> insert(final @NotNull T value, final @NotNull Comparator comparator)
     {
         if(null == value) throw new IllegalArgumentException();
         if(null == comparator) throw new IllegalArgumentException();
@@ -176,7 +175,7 @@ public final class BinaryTree<T>
      * @param comparator values that compare < 0 insert on left
      * @return a new tree
      */
-    public BinaryTree<T> update(final @NotNull T value, final @NotNull Comparator<T> comparator)
+    public BinaryTree<T> update(final @NotNull T value, final @NotNull Comparator comparator)
     {
         if(null == value) throw new IllegalArgumentException();
         if(null == comparator) throw new IllegalArgumentException();
@@ -247,7 +246,7 @@ public final class BinaryTree<T>
      * @param comparator
      * @return a new tree with the value removed and left side promoted.
      */
-    public BinaryTree<T> removePromoteLeft(final @NotNull T value, final @NotNull Comparator<T> comparator)
+    public BinaryTree<T> removePromoteLeft(final @NotNull T value, final @NotNull Comparator comparator)
     {
         if(null == value) throw new IllegalArgumentException();
         if(null == comparator) throw new IllegalArgumentException();
@@ -280,7 +279,7 @@ public final class BinaryTree<T>
      * @param comparator
      * @return a new tree with the value removed and right side promoted.
      */
-    public BinaryTree<T> removePromoteRight(final @NotNull T value, final @NotNull Comparator<T> comparator)
+    public BinaryTree<T> removePromoteRight(final @NotNull T value, final @NotNull Comparator comparator)
     {
         if(null == value) throw new IllegalArgumentException();
         if(null == comparator) throw new IllegalArgumentException();

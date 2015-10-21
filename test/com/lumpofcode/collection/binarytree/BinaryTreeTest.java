@@ -1,9 +1,9 @@
 package com.lumpofcode.collection.binarytree;
 
+import com.lumpofcode.collection.compare.DescendingComparator;
+import com.lumpofcode.collection.compare.DescendingIntegerComparator;
 import com.lumpofcode.collection.compare.IntegerComparator;
 import com.lumpofcode.collection.compare.IntegerStringComparator;
-import com.lumpofcode.collection.compare.StringComparator;
-import com.lumpofcode.collection.compare.ObjectComparator;
 import com.lumpofcode.collection.list.LinkList;
 import org.junit.Test;
 
@@ -464,5 +464,35 @@ public class BinaryTreeTest
 
         assertTrue("Original tree and remapped tree should be the same.", theBinaryTree.isEqual(theReformedTree));
 
+    }
+
+    @Test
+    public void testEqualsHashCode()
+    {
+        //
+        // insert 1000 random integers.
+        // create two identical trees and one mirrored tree.
+        //
+        final IntegerComparator theComparator = new IntegerComparator();
+        final DescendingComparator theDescendingComparator = new DescendingComparator();
+        BinaryTree<Integer> theBinaryTree = BinaryTree.Nil;
+        BinaryTree<Integer> theOtherBinaryTree = BinaryTree.Nil;
+        BinaryTree<Integer> theDescendingTree = BinaryTree.Nil;
+        final int n = 1000;
+
+        final Random random = new Random();
+        for(int i = 0; i < n; i += 1)
+        {
+            final int theRandomInt = random.nextInt();
+            theBinaryTree = theBinaryTree.insert(theRandomInt, theComparator);
+            theOtherBinaryTree = theOtherBinaryTree.insert(theRandomInt, theComparator);
+            theDescendingTree = theDescendingTree.insert(theRandomInt, theDescendingComparator);
+        }
+
+        assertTrue("the tree and the other tree have same hashcode.", theBinaryTree.hashCode() == theOtherBinaryTree.hashCode());
+        assertTrue("the tree and the other tree should be the same.", theBinaryTree.equals(theOtherBinaryTree));
+
+        assertTrue("the tree and the descending tree have different hashcode.", theBinaryTree.hashCode() != theDescendingTree.hashCode());
+        assertTrue("the tree and the descending tree should be the different.", !theBinaryTree.equals(theDescendingTree));
     }
 }

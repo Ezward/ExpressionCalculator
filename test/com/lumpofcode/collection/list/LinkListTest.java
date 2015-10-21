@@ -215,4 +215,18 @@ public class LinkListTest
 
         assertTrue("Nil is Nil", LinkList.Nil == LinkList.Nil.map((x) -> String.valueOf(x)));
     }
+
+    @Test
+    public void testEqualsHashCode()
+    {
+        LinkList<Integer> list = new LinkList<>(1).append(2).append(3);
+        LinkList<Integer> otherList = new LinkList<>(1).append(2).append(3);
+        LinkList<Integer> reverseList = list.reverse();
+
+        assertTrue("list and otherList should be equal.", list.equals(otherList));
+        assertTrue("list.hashCode and otherList.hashCode should be the same.", list.hashCode() == otherList.hashCode());
+
+        assertTrue("list and reverseList should NOT be equal.", !list.equals(reverseList));
+        assertTrue("list.hashCode and reverseList.hashCode should NOT be the same.", list.hashCode() != reverseList.hashCode());
+    }
 }
