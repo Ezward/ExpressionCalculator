@@ -187,23 +187,55 @@ public final class LinkList<T>
         return new LinkList<>(mapper.apply(head), tail.map(mapper));
     }
 
+    /**
+     * Determine if two trees are equal.
+     * Two trees are equal if they have the same structure
+     * and all elements are equal.
+     *
+     * @param that the tree to test against this for equality
+     * @return true of all elements are in the same order and are equal
+     */
+    public boolean isEqual(LinkList<T> that)
+    {
+        if(null == that) return false;
+        if(this == that) return true; // handles this == Nil or that == Nil
+
+        return this.head.equals(that.head) && this.tail.isEqual(that.tail);
+    }
+
     @Override
     public boolean equals(Object that)
     {
         if (this == that) return true;
         if (that == null || getClass() != that.getClass()) return false;
 
-        LinkList<?> linkList = (LinkList<?>) that;
-
-        if (head != null ? !head.equals(linkList.head) : linkList.head != null) return false;
-        return !(tail != null ? !tail.equals(linkList.tail) : linkList.tail != null);
+        return isEqual((LinkList)that);
     }
 
+    /**
+     * Hash the list.
+     * This uses an algorithm that takes position into
+     * account, so that reversed lists will hash to
+     * different values (unless they are symmetrical).
+     *
+     * @return hash code
+     */
     @Override
     public int hashCode()
     {
-        int result = head != null ? head.hashCode() : 0;
-        result = 31 * result + (tail != null ? tail.hashCode() : 0);
-        return result;
+        return innerHash(0);
+    }
+
+    /**
+     * inner hash algorithm that uses compounded hash to
+     * make it so that order matters in the hash.
+     *
+     * @param hash previous hash carried so it is compounded.
+     * @return the hash.
+     */
+    private final int innerHash(final int hash)
+    {
+        final int result = hash + 31 * ((head != null) ? head.hashCode() : 0);
+        return result + (tail != null ? tail.innerHash(result) : 0);
     }
 }

@@ -3,6 +3,7 @@ package com.lumpofcode.collection.binarytree;
 import com.lumpofcode.annotation.NotNull;
 
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.function.Function;
 
 /**
@@ -392,7 +393,7 @@ public final class BinaryTree<T>
      * with the same structure, but with elements mapped from T to R
      *
      * NOTE: if the original tree was ordered with a Comparator and
-     *       so would be a binary search tree, the resuting tree
+     *       so would be a binary search tree, the resulting tree
      *       may no longer be a search tree.  The elements will be
      *       in the same order as the original elements, but
      *       because the type has changed, search order may not
@@ -418,10 +419,51 @@ public final class BinaryTree<T>
      */
     public boolean isEqual(BinaryTree<T> that)
     {
-        if(this == Nil) return that == Nil;
+        if(null == that) return false;
+        if(this == that) return true; // handles this == Nil and that == Nil
+
         return this.value.equals(that.value)
                && this.left.isEqual(that.left)
                && this.right.isEqual(that.right);
     }
 
+    /**
+     * Determine if this tree is equal to that tree.
+     *
+     * NOTE: this must walk the entire tree to determine equality.
+     *
+     * @param that
+     * @return true if trees equal, false if not.
+     */
+    @Override
+    public boolean equals(Object that)
+    {
+        if (this == that) return true;
+        if (that == null || getClass() != that.getClass()) return false;
+
+        return isEqual((BinaryTree) that);
+    }
+
+    /**
+     * Calculate hashcode for the tree.
+     * Mirror image trees will produce different hashcodes.
+     *
+     * NOTE: this must walk the entire tree to produce the hashcode.
+     *
+     * @return hashcode of elements in tree.
+     */
+    @Override
+    public int hashCode()
+    {
+        int result = value != null ? value.hashCode() : 0;
+
+        //
+        // use different scaling factor for right & left
+        // so that a mirrored trees return different hash.
+        //
+        result = 31 * result + (left != null ? left.hashCode() : 0);
+        result = 61 * result + (right != null ? right.hashCode() : 0);
+
+        return result;
+    }
 }
