@@ -33,7 +33,7 @@ public final class ExpressionEvaluator
         }
 
         //
-        // the value stack shoudl have one value to return.
+        // the value stack should have one value to return.
         //
         final Double theValue = theContext.popValue();
         if(!theContext.isValueStackEmpty()) throw new IllegalStateException("Evaluation did not clean up the stack.");

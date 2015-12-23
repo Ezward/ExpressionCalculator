@@ -104,7 +104,14 @@ public final class LinkList<T>
     {
         if (Nil == this) return Nil;
         if (Nil == tail) return this;
-        return tail.last();
+        // return tail.last();
+
+        LinkList<T> thisList = this;
+        while(thisList.tail != Nil)
+        {
+            thisList = thisList.tail;
+        }
+        return thisList;
     }
 
     /**
@@ -143,7 +150,15 @@ public final class LinkList<T>
         if (null == element) throw new IllegalArgumentException();
 
         if (Nil == this) return new LinkList(element);
-        return new LinkList(head, tail.append(element));
+        // return new LinkList(head, tail.append(element));
+
+        // iterate to avoid recursion
+        LinkList<T> theReturnList = new LinkList(element);
+        for(LinkList<T> thisList = this.reverse(); thisList != Nil; thisList = thisList.tail)
+        {
+            theReturnList = theReturnList.insert(thisList.head);
+        }
+        return theReturnList;
     }
 
     /**
@@ -158,8 +173,20 @@ public final class LinkList<T>
 
         if (Nil == list) return this;
         if (Nil == this) return list;
-        if (Nil == tail) return new LinkList(head, list);   // optimization to avoid an extra recursive call
-        return new LinkList<>(head, tail.append(list));
+//        if (Nil == tail) return new LinkList(head, list);   // optimization to avoid an extra recursive call
+//        return new LinkList<>(head, tail.append(list));
+
+        //
+        // iterate to avoid recursive calls.
+        // we first reverse this list,
+        // then insert those elements before the given list.
+        //
+        LinkList<T> theReturnList = list;
+        for (LinkList<T> theStack = this.reverse(); theStack != Nil; theStack = theStack.tail)
+        {
+            theReturnList = theReturnList.insert(theStack.head);
+        }
+        return theReturnList;
     }
 
     /**
@@ -170,7 +197,15 @@ public final class LinkList<T>
     public LinkList<T> reverse()
     {
         if(this == Nil) return Nil;
-        return this.tail.reverse().append(this.head);
+        // return this.tail.reverse().append(this.head);
+
+        // iterate to avoid recursion.
+        LinkList<T> theReverseList = Nil;
+        for(LinkList<T> thisList = this; thisList != Nil; thisList = thisList.tail)
+        {
+            theReverseList = theReverseList.insert(thisList.head);
+        }
+        return theReverseList;
     }
 
     /**
@@ -181,16 +216,54 @@ public final class LinkList<T>
      * @param <R> the result type
      * @return list of elements mapped from T to R
      */
-    <R> LinkList<R> map(Function<? super T, ? extends R> mapper)
+    public <R> LinkList<R> map(Function<T, R> mapper)
     {
         if(this == Nil) return Nil;
-        return new LinkList<>(mapper.apply(head), tail.map(mapper));
+        // return new LinkList<>(mapper.apply(head), tail.map(mapper));
+
+        //
+        // iterate to avoid recursion.
+        // we build a reversed list of mapped elements
+        // using insertion to avoid the extra list scans
+        // that append would incur.
+        // then we just un-reverse the mapped list at the end.
+        //
+        LinkList<R> theMappedList = Nil;
+        for(LinkList<T> thisList = this; thisList != Nil; thisList = thisList.tail)
+        {
+            // inserts mapped values in reverse order
+            theMappedList = theMappedList.insert(mapper.apply(thisList.head));
+        }
+        return theMappedList.reverse(); // un-reverse it.
     }
 
     /**
-     * Determine if two trees are equal.
-     * Two trees are equal if they have the same structure
-     * and all elements are equal.
+     * Map the values in the list using the mapper function
+     * and flatten the resulting list of lists.
+     *
+     * @param mapper maps a T to a list of R
+     * @param <R> the result type of the list
+     * @return flattened list of R
+     */
+    public <R> LinkList<R> flatmap(Function<T, LinkList<R>> mapper)
+    {
+        if(this == Nil) return Nil;
+
+        // return mapper.apply(this.head).append(this.tail.flatmap(mapper));
+
+        // iterate to avoid recursive calls
+        LinkList<R> theReturnList = LinkList.Nil;
+        for(LinkList<T> theList = this; theList.isNotEmpty(); theList = theList.tail)
+        {
+            theReturnList = theReturnList.append(mapper.apply(theList.head));
+        }
+        return theReturnList;
+
+    }
+
+    /**
+     * Determine if two lists are equal.
+     * Two lists if all elements in the same order and are equal.
      *
      * @param that the tree to test against this for equality
      * @return true of all elements are in the same order and are equal
@@ -200,7 +273,17 @@ public final class LinkList<T>
         if(null == that) return false;
         if(this == that) return true; // handles this == Nil or that == Nil
 
-        return this.head.equals(that.head) && this.tail.isEqual(that.tail);
+        // return this.head.equals(that.head) && this.tail.isEqual(that.tail);
+        LinkList<T> thisList = this;
+        LinkList<T> thatList = that;
+        while(thisList != Nil)
+        {
+            if(!thisList.head.equals(thatList.head)) return false;
+
+            thisList = thisList.tail;
+            thatList = thatList.tail;
+        }
+        return true;
     }
 
     @Override
@@ -235,7 +318,16 @@ public final class LinkList<T>
      */
     private final int innerHash(final int hash)
     {
-        final int result = hash + 31 * ((head != null) ? head.hashCode() : 0);
-        return result + (tail != null ? tail.innerHash(result) : 0);
+        // final int result = hash + 31 * ((head != null) ? head.hashCode() : 0);
+        // return result + (tail != null ? tail.innerHash(result) : 0);
+
+        // iterate to avoid recursion
+        int result = 0;
+        for(LinkList<T> thisList = this; thisList != Nil; thisList = thisList.tail)
+        {
+            // compound result so we get different has for reversed lists
+            result += result + (hash + 31 * thisList.head.hashCode());
+        }
+        return result;
     }
 }

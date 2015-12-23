@@ -43,8 +43,6 @@ import com.lumpofcode.utils.StringUtils;
 @Immutable
 public final class ExpressionParser
 {
-	public static final NullExpression nil = new NullExpression();
-
 	/**
 	 * Exception thrown by parse().
 	 */
@@ -227,7 +225,23 @@ public final class ExpressionParser
 	}
 
 	private ExpressionParser() {}	// private class to enforce singleton
-	
+
+	/**
+	 * Empty expression
+	 */
+	public static final Expression nil = new Expression()
+	{
+		@Override public double evaluate() { return Double.NaN; }
+		@Override public String format() { return ""; }
+		@Override public void format(StringBuilder theBuilder) { return; }
+		@Override public String formatFullParenthesis() { return ""; }
+		@Override public void formatFullParenthesis(StringBuilder theBuilder) { return; }
+		@Override public int startIndex() { return 0; }
+		@Override public int endIndex() { return 0; }
+		@Override public void step(EvaluationContext theContext) { return; }
+	};
+
+
 	/**
 	 * Parse the input string and generate a parse tree from it.
 	 *
@@ -279,7 +293,7 @@ public final class ExpressionParser
 		}
 
 		//
-		// if the input is empty, return the NullExpression
+		// if the input is empty, return the empty Expression
 		//
 		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);
 		if(theStartIndex >= theInput.length())
@@ -514,58 +528,7 @@ public final class ExpressionParser
 		return theLeftExpression;
 	}
 
-	private final static class NullExpression implements Expression
-	{
-		@Override
-		public double evaluate()
-		{
-			return Double.NaN;
-		}
 
-		@Override
-		public String format()
-		{
-			return "";
-		}
-
-		@Override
-		public void format(StringBuilder theBuilder)
-		{
-			return;
-		}
-
-		@Override
-		public String formatFullParenthesis()
-		{
-			return "";
-		}
-
-		@Override
-		public void formatFullParenthesis(StringBuilder theBuilder)
-		{
-			return;
-		}
-
-		@Override
-		public int startIndex()
-		{
-			return 0;
-		}
-
-		@Override
-		public int endIndex()
-		{
-			return 0;
-		}
-
-		@Override
-		public void step(EvaluationContext theContext)
-		{
-			return;
-		}
-	}
-	
-	
 	//
 	//********** the private implementation classes for Expression and derivatives **************
 	//
