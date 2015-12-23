@@ -248,7 +248,7 @@ public final class ExpressionParser
 	 * The input is parsed completely; extra non-whitespace characters
 	 * that appear after a valid expression are treated as an error.
 	 *
-	 * @param theInput
+	 * @param theInput the buffer to parse
 	 * @return an Expression tree.  This is ExpressionParser.nil if
 	 *         the input is empty or all whitespace.
 	 * @throws ParseException if parsing fails due to syntax error.
@@ -269,27 +269,55 @@ public final class ExpressionParser
 		return theExpression;
 	}
 
+	/**
+	 * Parse an expression starting at the given index, until a complete
+	 * expression is parsed. This ignores any characters after the
+	 * expression. The last character parsed can be retrieved from results'
+	 * Expression.endIndex() method.
+	 *
+	 * @param theInput the buffer to parse
+	 * @param theIndex the character offset that parsing should start at
+	 * @return an Expression tree.  This is ExpressionParser.nil if
+	 *         theIndex is passed the end of theInput or
+	 *         theInput is empty or theInput is all whitespace.
+	 * @throws ParseException if parsing fails due to syntax error.
+	 * @throws NullPointerException if theInput is null.
+	 * @throws IndexOutOfBoundsException if theIndex is negative.
+	 */
+	public static Expression parse(final String theInput, final int theIndex) throws ParseException
+	{
+		return innerParse(theInput, theIndex);
+	}
+
 	//
 	// *********** the private methods for parsing sub-Expressions from the input ***************
 	//
 
 	/**
 	 * Parse an expression starting at the given index, until a complete
-	 * expression is parsed.
-	 * This ignores any characters after the expression.
+	 * expression is parsed. This ignores any characters after the
+	 * expression. The last character parsed can be retrieved from results'
+	 * Expression.endIndex() method.
 	 *
 	 * @param theInput the buffer to parse
 	 * @param theIndex the character offset that parsing should start at
 	 * @return an Expression tree.  This is ExpressionParser.nil if
-	 *         the input is empty or all whitespace.
+	 *         theIndex is passed the end of theInput or
+	 *         theInput is empty or theInput is all whitespace.
 	 * @throws ParseException if parsing fails due to syntax error.
 	 * @throws NullPointerException if theInput is null.
+	 * @throws IndexOutOfBoundsException if theIndex is negative.
 	 */
 	private static Expression innerParse(final String theInput, final int theIndex )
 	{
 		if(null == theInput)
 		{
 			throw new NullPointerException();
+		}
+
+		if(theIndex < 0)
+		{
+			throw new IndexOutOfBoundsException();
 		}
 
 		//
