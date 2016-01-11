@@ -129,7 +129,7 @@ public final class EvaluationOperation
     };
 
     /**
-     * Singletop for a unary negation operation
+     * Singleton for a unary negation operation
      */
     public static final EvaluationStep Negation = new EvaluationStep()
     {

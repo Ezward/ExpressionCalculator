@@ -238,7 +238,7 @@ public final class ExpressionParser
 		@Override public void formatFullParenthesis(StringBuilder theBuilder) { return; }
 		@Override public int startIndex() { return 0; }
 		@Override public int endIndex() { return 0; }
-		@Override public void step(EvaluationContext theContext) { return; }
+		@Override public void step(EvaluationContext theContext) { theContext.pushValue(Double.NaN); }
 	};
 
 
@@ -700,8 +700,8 @@ public final class ExpressionParser
 			//
 			// push the right, then push the left
 			//
-			theContext.pushEvaluationStep(thisRight);
-			theContext.pushEvaluationStep(thisLeft);
+			theContext.pushStep(thisRight);
+			theContext.pushStep(thisLeft);
 		}
 
 	}
@@ -783,9 +783,9 @@ public final class ExpressionParser
 			//
 			// push the operator, push the operand, then push the next
 			//
-			if(null != thisNext) theContext.pushEvaluationStep(thisNext);
-			theContext.pushEvaluationStep(EvaluationOperation.getBinaryOperation(String.valueOf(thisOperator)));
-			theContext.pushEvaluationStep(thisExpression);
+			if(null != thisNext) theContext.pushStep(thisNext);
+			theContext.pushStep(EvaluationOperation.getBinaryOperation(String.valueOf(thisOperator)));
+			theContext.pushStep(thisExpression);
 		}
 
 
@@ -914,8 +914,8 @@ public final class ExpressionParser
 			// so that the left operand is at the top of
 			// the stack and so is evaluated first.
 			//
-			theContext.pushEvaluationStep(thisRight);
-			theContext.pushEvaluationStep(thisLeft);
+			theContext.pushStep(thisRight);
+			theContext.pushStep(thisLeft);
 		}
 	}
 
@@ -996,8 +996,8 @@ public final class ExpressionParser
 			// so that the left operand is at the top of
 			// the stack and so is evaluated first.
 			//
-			if(!thisSign) theContext.pushEvaluationStep(EvaluationOperation.Negation);
-			theContext.pushEvaluationStep(thisInnerExpression);
+			if(!thisSign) theContext.pushStep(EvaluationOperation.Negation);
+			theContext.pushStep(thisInnerExpression);
 		}
 	}
 
@@ -1060,9 +1060,9 @@ public final class ExpressionParser
 			//
 			// push the operation and the arguments onto the stack.
 			//
-			theContext.pushEvaluationStep(EvaluationOperation.Exponentiation);
-			theContext.pushEvaluationStep(thisExponent);
-			theContext.pushEvaluationStep(thisBase);
+			theContext.pushStep(EvaluationOperation.Exponentiation);
+			theContext.pushStep(thisExponent);
+			theContext.pushStep(thisBase);
 		}
 	}
 
