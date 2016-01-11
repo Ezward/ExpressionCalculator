@@ -1,6 +1,9 @@
 package com.lumpofcode.expression;
 
 import com.lumpofcode.collection.list.LinkList;
+import com.lumpofcode.collection.list.LinkListIterator;
+
+import java.util.Iterator;
 
 /**
  * Context for step-wise evaluation of an ExpressionParser.Expression
@@ -79,23 +82,23 @@ public final class EvaluationContext
     }
 
     /**
-     * Get a copy of the value stack for debugging purposes.
+     * Get an iterator of the value stack for debugging purposes.
      *
-     * @return the value stack
+     * @return iterator for the value stack
      */
-    public LinkList<Double> values()
+    public Iterator<Double> values()
     {
-        return thisValueStack;
+        return new LinkListIterator<>(thisValueStack);
     }
 
     /**
-     * Get a copy of the evaluation stack for debugging purposes.
+     * Get an iterator of the evaluation stack for debugging purposes.
      *
-     * @return the evaluation stack.
+     * @return iterator for the evaluation stack.
      */
-    public LinkList<EvaluationStep> steps()
+    public Iterator<EvaluationStep> steps()
     {
-        return thisEvaluationStack;
+        return new LinkListIterator<>(thisEvaluationStack);
     }
 
     /**
