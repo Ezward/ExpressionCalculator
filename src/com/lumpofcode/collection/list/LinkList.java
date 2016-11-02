@@ -3,6 +3,7 @@ package com.lumpofcode.collection.list;
 import com.lumpofcode.annotation.NotNull;
 
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Persistent linked list.
@@ -190,6 +191,39 @@ public final class LinkList<T>
     }
 
     /**
+     * Remove the element at the given index.
+     * If the index is past the end of the list,
+     * then the list is returned.
+     *
+     * @param list
+     * @param index
+     * @return list without element at index
+     */
+    public LinkList<T> removeAt(int index)
+    {
+        if(Nil == this) return this;
+//        if(index < 0) throw new IndexOutOfBoundsException();
+//        if(0 == index) return tail;
+//        return new LinkList(this.head, this.tail.removeAt(index - 1));
+
+        //
+        // iterate to avoid recursive calls
+        // loop will use insert to build intermediate list to avoid many calls to append.
+        // the result is then reversed.
+        //
+        LinkList<T> theReturnList = LinkList.Nil;
+        for(LinkList<T> theList = this; theList.isNotEmpty(); theList = theList.tail)
+        {
+            if(index != 0)
+            {
+                theReturnList = theReturnList.insert(theList.head);
+            }
+            index -= 1;
+        }
+        return theReturnList.reverse();
+    }
+
+    /**
      * Reverse the elements of the list.
      *
      * @return a list with the element order reversed.
@@ -258,7 +292,34 @@ public final class LinkList<T>
             theReturnList = theReturnList.append(mapper.apply(theList.head));
         }
         return theReturnList;
+    }
 
+	/**
+     * Filter a list given a predicate.
+     *
+     * @param predicate
+     * @return a new list with those elements where predicate.test() returns true.
+     */
+    public LinkList<T> filter(Predicate<T> predicate)
+    {
+        if(this == Nil) return Nil;
+//        if(predicate.test(head)) return new LinkList<>(head, tail.filter(predicate));
+//        return tail.filter(predicate);
+
+        //
+        // iterate to avoid recursive calls
+        // loop will use insert to build intermediate list to avoid many calls to append.
+        // the result is then reversed.
+        //
+        LinkList<T> theReturnList = LinkList.Nil;
+        for(LinkList<T> theList = this; theList.isNotEmpty(); theList = theList.tail)
+        {
+            if(predicate.test(theList.head))
+            {
+                theReturnList = theReturnList.insert(theList.head);
+            }
+        }
+        return theReturnList.reverse();
     }
 
     /**

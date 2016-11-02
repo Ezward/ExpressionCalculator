@@ -295,6 +295,36 @@ public class ExpressionParserTest
 			fail("Unexpected exception.");
 		}
 
+		try
+		{
+			// unopened parenthesis
+			ExpressionParser.parse("1 - 2)");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
+
+		try
+		{
+			// empty parenthesis
+			ExpressionParser.parse("()");
+			fail("Expected a ParseExpection.");
+		}
+		catch (ExpressionParser.ParseException e)
+		{
+			assert(true);
+		}
+		catch (Exception e)
+		{
+			fail("Unexpected exception.");
+		}
+
 	}
 
 	@Test

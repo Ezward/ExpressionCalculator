@@ -229,4 +229,33 @@ public class LinkListTest
         assertTrue("list and reverseList should NOT be equal.", !list.equals(reverseList));
         assertTrue("list.hashCode and reverseList.hashCode should NOT be the same.", list.hashCode() != reverseList.hashCode());
     }
+
+    @Test
+    public void testFilter()
+    {
+        LinkList<Integer> list = new LinkList<>(1).append(2).append(3);
+
+        // filter out the even values, leaving the odd
+        LinkList<Integer> filtered = list.filter(i -> 1 == i % 2);
+
+        assertTrue("filtered list has two elements", 2 == filtered.size());
+        assertTrue("first item in filtered list is 1", 1 == filtered.head);
+        assertTrue("second item in filtered list is 3", 3 == filtered.tail.head);
+
+        // filter out the odd values, leaving the event
+        filtered = list.filter(i -> 0 == i % 2);
+        assertTrue("filtered list has two elements", 1 == filtered.size());
+        assertTrue("first item in filtered list is 2", 2 == filtered.head);
+    }
+
+    @Test
+    public void testRemoveAt()
+    {
+        LinkList<Integer> list = new LinkList<>(1).append(2).append(3);
+
+        LinkList<Integer> removed = list.removeAt(1);
+        assertTrue("list has two elements", 2 == removed.size());
+        assertTrue("first item in filtered list is 1", 1 == removed.head);
+        assertTrue("second item in filtered list is 3", 3 == removed.tail.head);
+    }
 }
