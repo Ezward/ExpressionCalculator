@@ -339,7 +339,7 @@ public final class ExpressionParser
 	{
 		final int theLength = theInput.length();
 		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);		
-		if(theStartIndex >= theLength) throw new ParseException("Unexpected end of input at %index. Expected sign, parenthesis or number.", theStartIndex);	// unexpected end of input: expected sign, parenthesis or number.
+		if(theStartIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected sign, parenthesis or number.", theStartIndex);	// unexpected end of input: expected sign, parenthesis or number.
 		
 		//
 		// parse the optional negation
