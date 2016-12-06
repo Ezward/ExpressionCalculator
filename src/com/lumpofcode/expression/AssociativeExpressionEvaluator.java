@@ -1,9 +1,16 @@
 package com.lumpofcode.expression;
 
+import com.lumpofcode.annotation.Immutable;
 import com.lumpofcode.utils.StringUtils;
 
 /**
  * @author Ezward
+ *
+ * NOTE: this grammar separates out sums from differences and products from quotients.
+ *       Thus, it is not a traditional factor/term grammar.  The grammar is
+ *       designed to separate out operations that are subject to the associative
+ *       and commutative properties with the notion that the parse tree can
+ *       then be more easily queried or manipulated using those mathematical properties.
  *
  * Singleton class to parse, evaluate and pretty-print simple 4-operator expressions
  * that use the following PEG grammar;
@@ -17,8 +24,10 @@ import com.lumpofcode.utils.StringUtils;
  * parenthesis ::= {sign} '(' expression ')'
  * value ::= [parenthesis | number ]
  * power ::= value{'^'value}
- * product ::= power {[ '*' | '/' ] power}*
- * sum ::= product  {['+' | '-'] product}*
+ * quotient ::= power {[ '*' | '/' ] power}*
+ * product ::= quotient { '/'  quotient}
+ * difference ::= product  {['+' | '-'] product}*
+ * sum ::= difference {'+' difference}*
  * expression ::= sum
  *
  * Key to PEG notation:
@@ -33,8 +42,12 @@ import com.lumpofcode.utils.StringUtils;
  *		double theValue = theExpression.evaluate();
  *		String thePrettyPrint = theExpression.format();
  *
+ * DONE: support stack-based evaluation (rather than recursive evaluation)
+ * DONE: support decimal numbers.
+ * DONE: support exponential operator;
  */
-public final class ExpressionEvaluator
+@Immutable
+public final class AssociativeExpressionEvaluator
 {
 	/**
 	 * Exception thrown by parse().
@@ -42,14 +55,14 @@ public final class ExpressionEvaluator
 	public static class ParseException extends RuntimeException
 	{
 		public final int index;
-
+		
 		public ParseException(final String theMessage, final int theIndex)
 		{
 			super(theMessage.replace("$index", String.valueOf(theIndex)));
 			this.index = theIndex;
 		}
 	}
-
+	
 	/**
 	 * @author Ezward
 	 *
@@ -64,14 +77,14 @@ public final class ExpressionEvaluator
 		 * @return the value
 		 */
 		double evaluate();
-
+		
 		/**
 		 * Format the expression into a human readable string.
 		 *
 		 * @return human readable string
 		 */
 		String format();
-
+		
 		/**
 		 * Format the expression into a human readable string
 		 * using a StringBuilder.
@@ -79,7 +92,7 @@ public final class ExpressionEvaluator
 		 * @param theBuilder
 		 */
 		void format(StringBuilder theBuilder);
-
+		
 		/**
 		 * Format the expression into a fully parenthesized
 		 * form.
@@ -87,7 +100,7 @@ public final class ExpressionEvaluator
 		 * @return fully parenthesized form of expression.
 		 */
 		String formatFullParenthesis();
-
+		
 		/**
 		 * Format the expression into a fully parenthesized
 		 * form using a StringBuilder.
@@ -95,13 +108,13 @@ public final class ExpressionEvaluator
 		 * @param theBuilder
 		 */
 		void formatFullParenthesis(StringBuilder theBuilder);
-
+		
 		/**
 		 * @return the offset of the start of the expression
 		 *         in the original input stream.
 		 */
 		int startIndex();
-
+		
 		/**
 		 *
 		 * @return the offset of the end of the expression
@@ -109,7 +122,7 @@ public final class ExpressionEvaluator
 		 */
 		int endIndex();
 	}
-
+	
 	/**
 	 * @author Ezward
 	 *
@@ -121,13 +134,13 @@ public final class ExpressionEvaluator
 		 * @return the number as parsed from the input.
 		 */
 		String number();
-
+		
 		/**
 		 * @return true if the number is an integer, otherwise it is a double.
 		 */
 		boolean isInteger();
 	}
-
+	
 	/**
 	 * @author Ezward
 	 *
@@ -142,14 +155,14 @@ public final class ExpressionEvaluator
 		 * @return true if positive, false if negated.
 		 */
 		boolean sign();
-
+		
 		/**
 		 * @return the Expression between the parenthesis.
 		 */
 		ExpressionNode innerExpression();
-
+		
 	}
-
+	
 	/**
 	 * @author Ezward
 	 *
@@ -163,11 +176,11 @@ public final class ExpressionEvaluator
 		Expression expression();
 		RightExpression next();
 	}
-
+	
 	/**
 	 * @author Ezward
 	 *
-	 * A series of binary operators.  In practice, the operators will either be a series of
+	 * A series of binary operators.  In practice, the operators will either be a series of 
 	 * additions and subtractions or a series of multiplications and divisions, that is,
 	 * terms and factors are not mixed.
 	 */
@@ -176,11 +189,21 @@ public final class ExpressionEvaluator
 		Expression left();
 		RightExpression right();
 	}
-
+	
 	/**
 	 * @author Ezward
 	 *
-	 * A series of chained multiplications and/or divisions.
+	 * A series of chained divisions.
+	 *
+	 */
+	public interface DivisionExpression extends ChainedExpression
+	{
+	}
+	
+	/**
+	 * @author Ezward
+	 *
+	 * A series of chained multiplications.
 	 *
 	 */
 	public interface MultiplicationExpression extends ChainedExpression
@@ -190,7 +213,17 @@ public final class ExpressionEvaluator
 	/**
 	 * @author Ezward
 	 *
-	 * A series of chained additions and/or subtractions.
+	 * A series of chained subtractions.
+	 *
+	 */
+	public interface SubtractionExpression extends ChainedExpression
+	{
+	}
+	
+	/**
+	 * @author Ezward
+	 *
+	 * A series of chained additions.
 	 *
 	 */
 	public interface AdditionExpression extends ChainedExpression
@@ -208,10 +241,9 @@ public final class ExpressionEvaluator
 		Expression base();
 		Expression exponent();
 	}
-
-	// enforce singleton with private constructor
-	private ExpressionEvaluator() { throw new RuntimeException("No contruction."); }
-
+	
+	private AssociativeExpressionEvaluator() {}	// private class to enforce singleton
+	
 	/**
 	 * Empty expression
 	 */
@@ -225,8 +257,8 @@ public final class ExpressionEvaluator
 		@Override public int startIndex() { return 0; }
 		@Override public int endIndex() { return 0; }
 	};
-
-
+	
+	
 	/**
 	 * Parse the input string and generate a parse tree from it.
 	 *
@@ -234,7 +266,7 @@ public final class ExpressionEvaluator
 	 * that appear after a valid expression are treated as an error.
 	 *
 	 * @param theInput the buffer to parse
-	 * @return an Expression tree.  This is ExpressionParser.nil if
+	 * @return an Expression tree.  This is ExpressionEvaluator.nil if
 	 *         the input is empty or all whitespace.
 	 * @throws ParseException if parsing fails due to syntax error.
 	 * @throws NullPointerException if theInput is null.
@@ -253,7 +285,7 @@ public final class ExpressionEvaluator
 		}
 		return theExpression;
 	}
-
+	
 	/**
 	 * Parse an expression starting at the given index, until a complete
 	 * expression is parsed. This ignores any characters after the
@@ -262,7 +294,7 @@ public final class ExpressionEvaluator
 	 *
 	 * @param theInput the buffer to parse
 	 * @param theIndex the character offset that parsing should start at
-	 * @return an Expression tree.  This is ExpressionParser.nil if
+	 * @return an Expression tree.  This is ExpressionEvaluator.nil if
 	 *         theIndex is passed the end of theInput or
 	 *         theInput is empty or theInput is all whitespace.
 	 * @throws ParseException if parsing fails due to syntax error.
@@ -273,11 +305,11 @@ public final class ExpressionEvaluator
 	{
 		return innerParse(theInput, theIndex);
 	}
-
+	
 	//
 	// *********** the private methods for parsing sub-Expressions from the input ***************
 	//
-
+	
 	/**
 	 * Parse an expression starting at the given index, until a complete
 	 * expression is parsed. This ignores any characters after the
@@ -286,7 +318,7 @@ public final class ExpressionEvaluator
 	 *
 	 * @param theInput the buffer to parse
 	 * @param theIndex the character offset that parsing should start at
-	 * @return an Expression tree.  This is ExpressionParser.nil if
+	 * @return an Expression tree.  This is ExpressionEvaluator.nil if
 	 *         theIndex is passed the end of theInput or
 	 *         theInput is empty or theInput is all whitespace.
 	 * @throws ParseException if parsing fails due to syntax error.
@@ -299,12 +331,12 @@ public final class ExpressionEvaluator
 		{
 			throw new NullPointerException();
 		}
-
+		
 		if(theIndex < 0)
 		{
 			throw new IndexOutOfBoundsException();
 		}
-
+		
 		//
 		// if the input is empty, return the empty Expression
 		//
@@ -313,19 +345,19 @@ public final class ExpressionEvaluator
 		{
 			return nil;
 		}
-
+		
 		//
 		// otherwise there must be a valid expression
 		//
 		return parseSum(theInput, theStartIndex);
 	}
-
+	
 	private static ExpressionNode parseValue(final String theInput, final int theIndex)
 	{
 		final int theLength = theInput.length();
 		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);
 		if(theStartIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected sign, parenthesis or number.", theStartIndex);	// unexpected end of input: expected sign, parenthesis or number.
-
+		
 		//
 		// parse the optional negation
 		//
@@ -336,7 +368,7 @@ public final class ExpressionEvaluator
 			theSign = false;
 			theExpressionIndex = theStartIndex + 1;	// skip the sign
 		}
-
+		
 		if(theExpressionIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a number or opening parenthesis", theExpressionIndex);	// unexpected end of input: expecting number or parenthesis
 		final char theChar = theInput.charAt(theExpressionIndex);
 		if('(' == theChar)
@@ -347,9 +379,9 @@ public final class ExpressionEvaluator
 			{
 				throw new ParseException("Unexpected end of input at $index while parsing a value.", theEndIndex);
 			}
-
+			
 			if(')' != theInput.charAt(theEndIndex)) throw new ParseException("Unexpected character at $index.  Expected closing parenthesis.", theEndIndex);
-
+			
 			return new ParenthesisNode(theStartIndex, theEndIndex + 1, theSign, theAdditionExpression);
 		}
 		else if(StringUtils.isDigit(theChar))
@@ -357,16 +389,16 @@ public final class ExpressionEvaluator
 			// include the sign with the digits (rather than a separate negation operation)
 			return parseNumber(theInput, theStartIndex);
 		}
-
+		
 		throw new ParseException("Unexpected character at $index.  Expected parenthesis or number.", theExpressionIndex);	// Expected parenthesis or number.
 	}
-
+	
 	private static ExpressionNode parseNumber(final String theInput, int theIndex)
 	{
 		final int theLength = theInput.length();
 		final int theStartIndex = StringUtils.scanWhitespace(theInput, theIndex);
 		if(theStartIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a sign, opening parenthesis or a number.", theStartIndex);	// unexpected end of input: expected sign, parenthesis or number.
-
+		
 		//
 		// parse the optional negation
 		//
@@ -377,18 +409,18 @@ public final class ExpressionEvaluator
 			theSign = false;
 			theExpressionIndex = theStartIndex + 1;	// skip the sign
 		}
-
+		
 		if(theExpressionIndex >= theLength) throw new ParseException("Unexpected end of input at $index.  Expected a digit.", theExpressionIndex);
 		if(!StringUtils.isDigit(theInput.charAt(theExpressionIndex))) throw new ParseException("Unexpected character at $index. Expected a digit.", theExpressionIndex);
-
+		
 		//
 		// scan the required integer part
 		//
 		int theEndIndex = StringUtils.scanNumeric(theInput, theExpressionIndex);
-
+		
 		// include the sign with the digits (rather than a separate negation operation)
 		final String theWholePart = theInput.substring(theStartIndex, theEndIndex);
-
+		
 		//
 		// scan optional decimal part
 		//
@@ -397,15 +429,15 @@ public final class ExpressionEvaluator
 		{
 			final int theDecimalIndex = theEndIndex;
 			theEndIndex += 1;	// count the decimal
-
+			
 			// scan the decimal part
 			if(theEndIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a digit after the decimal point.", theEndIndex);
 			if(!StringUtils.isDigit(theInput.charAt(theEndIndex))) throw new ParseException("Unexpected character at $index. Expected a digit after the decimal point.", theEndIndex);
-
+			
 			theEndIndex = StringUtils.scanNumeric(theInput, theEndIndex);
 			theDecimalPart = theInput.substring(theDecimalIndex, theEndIndex);
 		}
-
+		
 		//
 		// scan optional exponent
 		//
@@ -414,27 +446,27 @@ public final class ExpressionEvaluator
 		{
 			final int theExponentIndex = theEndIndex;
 			theEndIndex += 1;	// count the exponent char
-
+			
 			// scan the exponent part
 			if(theEndIndex >= theLength) throw new ParseException("Unexpected end of input at $index. Expected a digit following the exponent character.", theEndIndex);
 			if(!StringUtils.isDigit(theInput.charAt(theEndIndex))) throw new ParseException("Unexpected character at $index. Expected a digit following the exponent character.", theEndIndex);
-
+			
 			theEndIndex = StringUtils.scanNumeric(theInput, theEndIndex);
 			theExponentPart = theInput.substring(theExponentIndex, theEndIndex);
 		}
-
+		
 		//
 		// if there is no decimal part and no exponent, it is an integer
 		//
 		final boolean isInteger = (theDecimalPart.isEmpty() && theExponentPart.isEmpty());
-
+		
 		return new NumberNode(theStartIndex, theEndIndex, theInput.substring(theStartIndex, theEndIndex), isInteger);
 	}
-
+	
 	private static ExpressionNode parsePower(final String theInput, int theIndex)
 	{
 		final ExpressionNode theLeftExpression = parseValue(theInput, theIndex);
-
+		
 		final int theLength = theInput.length();
 		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
 		if(theOperatorIndex < theLength)
@@ -444,20 +476,20 @@ public final class ExpressionEvaluator
 			{
 				// parse the right side
 				final ExpressionNode theRightExpression = parseValue(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
-
+				
 				final PowerNode thePowerExpression = new PowerNode(theLeftExpression, theRightExpression);
 				return thePowerExpression;
 			}
 		}
-
+		
 		//
 		// only left side
 		//
 		return theLeftExpression;
 	}
-
-
-	private static ExpressionNode parseProduct(final String theInput, int theIndex)
+	
+	
+	private static ExpressionNode parseQuotient(final String theInput, int theIndex)
 	{
 		final ExpressionNode theLeftExpression = parsePower(theInput, theIndex);
 
@@ -466,7 +498,7 @@ public final class ExpressionEvaluator
 		if(theOperatorIndex < theLength)
 		{
 			char theOperator = theInput.charAt(theOperatorIndex);
-			if(('*' == theOperator) || ('/' == theOperator))
+			if('/' == theOperator)
 			{
 				//
 				// collect sequential multiplications
@@ -475,12 +507,12 @@ public final class ExpressionEvaluator
 				while(theOperatorIndex < theLength)
 				{
 					theOperator = theInput.charAt(theOperatorIndex);
-					if(false == (('*' == theOperator) || ('x' == theOperator) || ('/' == theOperator))) break;
+					if(false == ('/' == theOperator)) break;
 
 					// parse the right side
 					final ExpressionNode theRightExpression = parsePower(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
 
-					// append to list of multiplications
+					// append to list of operations
 					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, String.valueOf(theOperator), theRightExpression);
 					theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
 
@@ -488,8 +520,8 @@ public final class ExpressionEvaluator
 					theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
 				}
 
-				final MultiplicationNode theMultiplicationExpression = new MultiplicationNode(theLeftExpression, theRightExpressions);
-				return theMultiplicationExpression;
+				final DivisionNode theExpression = new DivisionNode(theLeftExpression, theRightExpressions);
+				return theExpression;
 			}
 		}
 
@@ -499,16 +531,58 @@ public final class ExpressionEvaluator
 		return theLeftExpression;
 	}
 
-	private static ExpressionNode parseSum(final String theInput, int theIndex)
+	private static ExpressionNode parseProduct(final String theInput, int theIndex)
 	{
-		final ExpressionNode theLeftExpression = parseProduct(theInput, theIndex);
-
+		final ExpressionNode theLeftExpression = parseQuotient(theInput, theIndex);
+		
 		final int theLength = theInput.length();
 		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
 		if(theOperatorIndex < theLength)
 		{
 			char theOperator = theInput.charAt(theOperatorIndex);
-			if(('+' == theOperator) || ('-' == theOperator))
+			if('*' == theOperator)
+			{
+				//
+				// collect sequential multiplications
+				//
+				RightExpressionNode theRightExpressions = null;
+				while(theOperatorIndex < theLength)
+				{
+					theOperator = theInput.charAt(theOperatorIndex);
+					if(false == (('*' == theOperator) || ('x' == theOperator))) break;
+					
+					// parse the right side
+					final ExpressionNode theRightExpression = parseQuotient(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
+					
+					// append to list of multiplications
+					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, String.valueOf(theOperator), theRightExpression);
+					theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
+					
+					// skip trailing whitespace
+					theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
+				}
+				
+				final MultiplicationNode theExpression = new MultiplicationNode(theLeftExpression, theRightExpressions);
+				return theExpression;
+			}
+		}
+		
+		//
+		// only left side
+		//
+		return theLeftExpression;
+	}
+	
+	private static ExpressionNode parseDifference(final String theInput, int theIndex)
+	{
+		final ExpressionNode theLeftExpression = parseProduct(theInput, theIndex);
+		
+		final int theLength = theInput.length();
+		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
+		if(theOperatorIndex < theLength)
+		{
+			char theOperator = theInput.charAt(theOperatorIndex);
+			if('-' == theOperator)
 			{
 				//
 				// parse sequential additions
@@ -517,10 +591,52 @@ public final class ExpressionEvaluator
 				while(theOperatorIndex < theLength)
 				{
 					theOperator = theInput.charAt(theOperatorIndex);
-					if(false == (('+' == theOperator) || ('-' == theOperator))) break;
-
+					if(false == ('-' == theOperator)) break;
+					
 					// parse the right side
 					final ExpressionNode theRightExpression = parseProduct(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
+					
+					// append to list of additions
+					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, String.valueOf(theOperator), theRightExpression);
+					theRightExpressions = (null == theRightExpressions) ? theRightExpressionNode : theRightExpressions.append(theRightExpressionNode);
+					
+					// skip to past the trailing whitespace
+					theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
+				}
+				
+				final SubtractionNode theExpression = new SubtractionNode(theLeftExpression, theRightExpressions);
+				return theExpression;
+			}
+		}
+		
+		//
+		// only left side
+		//
+		return theLeftExpression;
+	}
+	
+	private static ExpressionNode parseSum(final String theInput, int theIndex)
+	{
+		final ExpressionNode theLeftExpression = parseDifference(theInput, theIndex);
+
+		final int theLength = theInput.length();
+		int theOperatorIndex = StringUtils.scanWhitespace(theInput, theLeftExpression.endIndex());
+		if(theOperatorIndex < theLength)
+		{
+			char theOperator = theInput.charAt(theOperatorIndex);
+			if('+' == theOperator)
+			{
+				//
+				// parse sequential additions
+				//
+				RightExpressionNode theRightExpressions = null;
+				while(theOperatorIndex < theLength)
+				{
+					theOperator = theInput.charAt(theOperatorIndex);
+					if(false == ('+' == theOperator)) break;
+
+					// parse the right side
+					final ExpressionNode theRightExpression = parseDifference(theInput, StringUtils.scanWhitespace(theInput, theOperatorIndex + 1));
 
 					// append to list of additions
 					final RightExpressionNode theRightExpressionNode = new RightExpressionNode(theOperatorIndex, String.valueOf(theOperator), theRightExpression);
@@ -530,8 +646,8 @@ public final class ExpressionEvaluator
 					theOperatorIndex = StringUtils.scanWhitespace(theInput, theRightExpression.endIndex());
 				}
 
-				final AdditionNode theAdditionExpression = new AdditionNode(theLeftExpression, theRightExpressions);
-				return theAdditionExpression;
+				final AdditionNode theExpression = new AdditionNode(theLeftExpression, theRightExpressions);
+				return theExpression;
 			}
 		}
 
@@ -545,39 +661,40 @@ public final class ExpressionEvaluator
 	//
 	//********** the private implementation classes for Expression and derivatives **************
 	//
-
+	
 	/**
 	 * @author Ezward
 	 *
 	 * Generic immutable parse tree node for expressions.
 	 *
 	 */
+	@Immutable
 	private static abstract class ExpressionNode implements Expression
 	{
 		private final int thisStart;
 		private final int thisEnd;
-
+		
 		public ExpressionNode(final int theStartIndex, final int theEndIndex)
 		{
 			if(theStartIndex < 0) throw new RuntimeException();
 			if(theStartIndex > theEndIndex) throw new RuntimeException();
-
+			
 			thisStart = theStartIndex;
 			thisEnd = theEndIndex;
 		}
-
+		
 		@Override
 		public final int startIndex() { return thisStart; }
-
+		
 		@Override
 		public final int endIndex() { return thisEnd; }
-
+		
 		@Override
 		public abstract double evaluate();
-
+		
 		@Override
 		public abstract void format(StringBuilder theBuilder);
-
+		
 		@Override
 		public String format()
 		{
@@ -585,10 +702,10 @@ public final class ExpressionEvaluator
 			this.format(theBuilder);
 			return theBuilder.toString();
 		}
-
+		
 		@Override
 		public abstract void formatFullParenthesis(StringBuilder theBuilder);
-
+		
 		@Override
 		public String formatFullParenthesis()
 		{
@@ -598,12 +715,13 @@ public final class ExpressionEvaluator
 		}
 	}
 
-	private static final class AdditionNode extends ExpressionNode implements AdditionExpression
+	@Immutable
+	private static abstract class ChainedExpressionNode extends ExpressionNode implements ChainedExpression
 	{
 		private final ExpressionNode thisLeft;
 		private final RightExpression thisRight;
 
-		public AdditionNode(ExpressionNode theLeft, final RightExpressionNode theRight)
+		public ChainedExpressionNode(ExpressionNode theLeft, final RightExpressionNode theRight)
 		{
 			super(theLeft.startIndex(), theRight.last().endIndex());
 
@@ -612,7 +730,7 @@ public final class ExpressionEvaluator
 		}
 
 		@Override
-		public Expression left() { return thisLeft; }
+		public final Expression left() { return thisLeft; }
 
 		/**
 		 * Get the list of consecutive additions and subtractions
@@ -620,11 +738,11 @@ public final class ExpressionEvaluator
 		 * @return immutable list of consecutive additions and subtractions
 		 */
 		@Override
-		public RightExpression right() { return thisRight; }
+		public final RightExpression right() { return thisRight; }
 
 
 		@Override
-		public void format(StringBuilder theBuilder)
+		public final void format(StringBuilder theBuilder)
 		{
 			thisLeft.format(theBuilder);
 			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
@@ -646,19 +764,28 @@ public final class ExpressionEvaluator
 		}
 
 		@Override
+		abstract public double evaluate();
+	}
+
+
+	@Immutable
+	private static final class SubtractionNode extends ChainedExpressionNode implements SubtractionExpression
+	{
+		public SubtractionNode(ExpressionNode theLeft, final RightExpressionNode theRight)
+		{
+			super(theLeft, theRight);
+		}
+
+		@Override
 		public double evaluate()
 		{
 			//
 			// evaluate multiplication/division expressions from left to right
 			//
-			double theLeftValue = thisLeft.evaluate();
-			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
+			double theLeftValue = left().evaluate();
+			for(RightExpression theRight = right(); null != theRight; theRight = theRight.next())
 			{
-				if("+".equals(theRight.operator()))
-				{
-					theLeftValue += theRight.evaluate();
-				}
-				else if("-".equals(theRight.operator()))
+				if("-".equals(theRight.operator()))
 				{
 					theLeftValue -= theRight.evaluate();
 				}
@@ -670,41 +797,72 @@ public final class ExpressionEvaluator
 			return theLeftValue;
 		}
 	}
+	
+	@Immutable
+	private static final class AdditionNode extends ChainedExpressionNode implements AdditionExpression
+	{
+		public AdditionNode(ExpressionNode theLeft, final RightExpressionNode theRight)
+		{
+			super(theLeft, theRight);
+		}
 
+		@Override
+		public double evaluate()
+		{
+			//
+			// evaluate multiplication/division expressions from left to right
+			//
+			double theLeftValue = left().evaluate();
+			for(RightExpression theRight = right(); null != theRight; theRight = theRight.next())
+			{
+				if("+".equals(theRight.operator()))
+				{
+					theLeftValue += theRight.evaluate();
+				}
+				else
+				{
+					throw new IllegalStateException("Unexpected operator ($operator) encountered while evaluating an AdditionNode.".replace("$operator", String.valueOf(theRight.operator())));
+				}
+			}
+			return theLeftValue;
+		}
+	}
+
+	@Immutable
 	private static final class RightExpressionNode extends ExpressionNode implements RightExpression
 	{
 		private final String thisOperator;
 		private final ExpressionNode thisExpression;
 		private final RightExpressionNode thisNext;
-
+		
 		public RightExpressionNode(final int theStartIndex, final String theOperator, final ExpressionNode theRight, final RightExpressionNode theNext)
 		{
 			super(theStartIndex, theRight.endIndex());
-
+			
 			if(null == theRight) throw new RuntimeException();
-
+			
 			thisOperator = theOperator;
 			thisExpression = theRight;
 			thisNext = theNext;
 		}
-
+		
 		public RightExpressionNode(final int theStartIndex, final String theOperator, final ExpressionNode theRight)
 		{
 			this(theStartIndex, theOperator, theRight, null);
 		}
-
+		
 		@Override
 		public String operator() { return thisOperator; }
-
+		
 		@Override
 		public ExpressionNode expression() { return thisExpression; }
-
+		
 		@Override
 		public RightExpression next() { return thisNext; }
-
+		
 		@Override
 		public double evaluate() { return thisExpression.evaluate(); }
-
+		
 		@Override
 		public String format()
 		{
@@ -712,14 +870,14 @@ public final class ExpressionEvaluator
 			this.format(theBuilder);
 			return theBuilder.toString();
 		}
-
+		
 		@Override
 		public void format(StringBuilder theBuilder)
 		{
 			theBuilder.append(' ').append(thisOperator).append(' ');
 			thisExpression.format(theBuilder);
 		}
-
+		
 		@Override
 		public String formatFullParenthesis()
 		{
@@ -727,7 +885,7 @@ public final class ExpressionEvaluator
 			this.formatFullParenthesis(theBuilder);
 			return theBuilder.toString();
 		}
-
+		
 		@Override
 		public void formatFullParenthesis(StringBuilder theBuilder)
 		{
@@ -752,7 +910,7 @@ public final class ExpressionEvaluator
 			}
 			return theNode;
 		}
-
+		
 		/**
 		 * Append another list or right expression to this right expression.
 		 *
@@ -770,54 +928,48 @@ public final class ExpressionEvaluator
 			return new RightExpressionNode(startIndex(), thisOperator, thisExpression, thisNext.append(list));
 		}
 	}
+	
+	/**
+	 * expression node for a chain of division operations
+	 */
+	@Immutable
+	private static final class DivisionNode extends ChainedExpressionNode implements MultiplicationExpression
+	{
+		public DivisionNode(ExpressionNode theLeft, final RightExpressionNode theRight)
+		{
+			super(theLeft, theRight);
+		}
+		@Override
+		public double evaluate()
+		{
+			//
+			// evaluate multiplication/division expressions from left to right
+			//
+			double theLeftValue = left().evaluate();
+			for(RightExpression theRight = right(); null != theRight; theRight = theRight.next())
+			{
+				if("/".equals(theRight.operator()))
+				{
+					theLeftValue /= theRight.evaluate();
+				}
+				else
+				{
+					throw new IllegalStateException("Unexpected operator ($operator) encountered while evaluating a MultiplicationNode.".replace("$operator", String.valueOf(theRight.operator())));
+				}
+			}
+			return theLeftValue;
+		}
+	}
 
 	/**
 	 * expression node for a chain of multiplication/division operations
 	 */
-	private static final class MultiplicationNode extends ExpressionNode implements MultiplicationExpression
+	@Immutable
+	private static final class MultiplicationNode extends ChainedExpressionNode implements MultiplicationExpression
 	{
-		private final ExpressionNode thisLeft;
-		private final RightExpression thisRight;
-
 		public MultiplicationNode(ExpressionNode theLeft, final RightExpressionNode theRight)
 		{
-			super(theLeft.startIndex(), theRight.last().endIndex());
-
-			thisLeft = theLeft;
-			thisRight = theRight;
-		}
-
-		@Override
-		public Expression left() { return thisLeft; }
-
-		/**
-		 * Get the list of consecutive multiplications and divisions
-		 *
-		 * @return immutable list of consecutive multiplications and divisions
-		 */
-		@Override
-		public RightExpression right() { return thisRight; }
-
-		@Override
-		public void format(StringBuilder theBuilder)
-		{
-			thisLeft.format(theBuilder);
-			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
-			{
-				theRight.format(theBuilder);
-			}
-		}
-
-		@Override
-		public void formatFullParenthesis(StringBuilder theBuilder)
-		{
-			theBuilder.append('(');
-			thisLeft.formatFullParenthesis(theBuilder);
-			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
-			{
-				theRight.formatFullParenthesis(theBuilder);
-			}
-			theBuilder.append(')');
+			super(theLeft, theRight);
 		}
 
 		@Override
@@ -826,14 +978,10 @@ public final class ExpressionEvaluator
 			//
 			// evaluate multiplication/division expressions from left to right
 			//
-			double theLeftValue = thisLeft.evaluate();
-			for(RightExpression theRight = thisRight; null != theRight; theRight = theRight.next())
+			double theLeftValue = left().evaluate();
+			for(RightExpression theRight = right(); null != theRight; theRight = theRight.next())
 			{
-				if("/".equals(theRight.operator()))
-				{
-					theLeftValue /= theRight.evaluate();
-				}
-				else if("*".equals(theRight.operator()))
+				if("*".equals(theRight.operator()))
 				{
 					theLeftValue *= theRight.evaluate();
 				}
@@ -849,27 +997,28 @@ public final class ExpressionEvaluator
 	/**
 	 * Immutable expression node for a parenthesized expression.
 	 */
+	@Immutable
 	private static final class ParenthesisNode extends ExpressionNode implements ParenthesisExpression
 	{
 		private final ExpressionNode thisInnerExpression;
 		private final boolean thisSign;
-
+		
 		public ParenthesisNode(final int theStartIndex, final int theEndIndex, final boolean theSign, final ExpressionNode theInnerExpression)
 		{
 			super(theStartIndex, theEndIndex);
-
+			
 			if(null == theInnerExpression) throw new RuntimeException();
-
+			
 			thisSign = theSign;
 			thisInnerExpression = theInnerExpression;
 		}
-
+		
 		@Override
 		public boolean sign() { return thisSign; }
-
+		
 		@Override
 		public ExpressionNode innerExpression() { return thisInnerExpression; }
-
+		
 		@Override
 		public void format(StringBuilder theBuilder)
 		{
@@ -882,7 +1031,7 @@ public final class ExpressionEvaluator
 			thisInnerExpression.format(theBuilder);
 			theBuilder.append(')');
 		}
-
+		
 		@Override
 		public void formatFullParenthesis(StringBuilder theBuilder)
 		{
@@ -900,7 +1049,7 @@ public final class ExpressionEvaluator
 				theBuilder.append(')');
 			}
 		}
-
+		
 		@Override
 		public double evaluate()
 		{
@@ -908,29 +1057,30 @@ public final class ExpressionEvaluator
 			return thisSign ? theValue : -theValue;
 		}
 	}
-
+	
 	/**
 	 * Immutable expression node for a number.
 	 */
+	@Immutable
 	private static final class PowerNode extends ExpressionNode implements PowerExpression
 	{
 		private final ExpressionNode thisBase;
 		private final ExpressionNode thisExponent;
-
+		
 		public PowerNode(final ExpressionNode theBase, final ExpressionNode theExponent)
 		{
 			super(theBase.startIndex(), theExponent.endIndex());
-
+			
 			thisBase = theBase;
 			thisExponent = theExponent;
 		}
-
+		
 		@Override
 		public ExpressionNode base() { return thisBase; }
-
+		
 		@Override
 		public ExpressionNode exponent() { return thisExponent; }
-
+		
 		@Override
 		public void format(StringBuilder theBuilder)
 		{
@@ -938,7 +1088,7 @@ public final class ExpressionEvaluator
 			theBuilder.append('^');
 			thisExponent.format(theBuilder);
 		}
-
+		
 		@Override
 		public void formatFullParenthesis(StringBuilder theBuilder)
 		{
@@ -946,7 +1096,7 @@ public final class ExpressionEvaluator
 			format(theBuilder);
 			theBuilder.append(')');
 		}
-
+		
 		@Override
 		public double evaluate()
 		{
@@ -955,44 +1105,45 @@ public final class ExpressionEvaluator
 			return Math.pow(theBase, theExponent);
 		}
 	}
-
+	
 	/**
 	 * Immutable expression node for a number.
 	 */
+	@Immutable
 	private static final class NumberNode extends ExpressionNode implements NumberExpression
 	{
 		private final String thisNumber;
 		private final Double thisValue;
 		private final boolean thisIsInteger;
-
+		
 		public NumberNode(final int theStartIndex, final int theEndIndex, final String theNumber, final boolean isInteger)
 		{
 			super(theStartIndex, theEndIndex);
-
+			
 			if((null == theNumber) || theNumber.isEmpty()) throw new RuntimeException();
-
+			
 			thisNumber = theNumber;
 			thisIsInteger = isInteger;
 			thisValue = Double.valueOf(theNumber);
 		}
-
+		
 		@Override
 		public String number() { return thisNumber; }
-
+		
 		public boolean isInteger() { return thisIsInteger; }
-
+		
 		@Override
 		public void format(StringBuilder theBuilder)
 		{
 			theBuilder.append(thisNumber);
 		}
-
+		
 		@Override
 		public void formatFullParenthesis(StringBuilder theBuilder)
 		{
 			format(theBuilder);
 		}
-
+		
 		@Override
 		public double evaluate()
 		{

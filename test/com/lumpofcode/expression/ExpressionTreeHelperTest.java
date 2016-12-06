@@ -49,6 +49,9 @@ public class ExpressionTreeHelperTest
 		String theExpression = "4 + ((1 + 2) * 3) * 5";
 		String theSimplifiedExpression = ExpressionTreeHelper.evaluateNextOperation(theExpression, numberFormatter);
 
+		//
+		// simplify until we have a literal value
+		//
 		System.out.println(theExpression);
 		while(!theExpression.equals(theSimplifiedExpression))
 		{
@@ -66,7 +69,7 @@ public class ExpressionTreeHelperTest
 			ExpressionTreeHelper.evaluateNextOperation("2 + 3 +", numberFormatter);
 			fail("A ParseException should be thrown, we should not get here.");
 		}
-		catch(ExpressionEvaluator.ParseException e)
+		catch(ExpressionParser.ParseException e)
 		{
 			assertTrue(true);
 		}
@@ -80,11 +83,11 @@ public class ExpressionTreeHelperTest
 	public void testNextParenthesisOperation()
 	{
 		final String expressionText = "10 + 5 * -6 - (-20 / (-2 + 3)) + -100 - 50";
-		final ExpressionEvaluator.Expression expressionTree = ExpressionEvaluator.parse(expressionText);
-		final ExpressionEvaluator.Expression operation = ExpressionTreeHelper.nextOperation(expressionTree);
+		final ExpressionParser.Expression expressionTree = ExpressionParser.parse(expressionText);
+		final ExpressionParser.Expression operation = ExpressionTreeHelper.nextOperation(expressionTree);
 
 		assertNotNull("There should be an operation", operation);
-		assertTrue("It should be a parenthesis operation", operation instanceof ExpressionEvaluator.ParenthesisExpression);
+		assertTrue("It should be a parenthesis operation", operation instanceof ExpressionParser.ParenthesisExpression);
 		assertEquals("It should be at index 21 of input", 21, operation.startIndex());
 		assertEquals("It should extent up to (not including) index 29 of input", 29, operation.endIndex());
 		assertEquals("It should format to (-2 + 3)", "(-2 + 3)", operation.format());
@@ -94,30 +97,30 @@ public class ExpressionTreeHelperTest
 	public void testNextMultiplicationOperation()
 	{
 		final String expressionText = "10 + 5 * -6 - -20 / -2 + 3 + -100 - 50";
-		final ExpressionEvaluator.Expression expressionTree = ExpressionEvaluator.parse(expressionText);
-		final ExpressionEvaluator.Expression operation = ExpressionTreeHelper.nextOperation(expressionTree);
+		final ExpressionParser.Expression expressionTree = ExpressionParser.parse(expressionText);
+		final ExpressionParser.Expression operation = ExpressionTreeHelper.nextOperation(expressionTree);
 
 		assertNotNull("There should be an operation", operation);
-		assertTrue("It should be a multiplication operation", operation instanceof ExpressionEvaluator.MultiplicationExpression);
+		assertTrue("It should be a multiplication operation", operation instanceof ExpressionParser.MultiplicationExpression);
 		assertEquals("It should start at index 5 of input", 5, operation.startIndex());
-		assertEquals("It should extend to index 11 of input.", 11, ((ExpressionEvaluator.MultiplicationExpression)operation).right().endIndex());
-		assertEquals("Operator should be at index 7 of input", 7, ((ExpressionEvaluator.MultiplicationExpression)operation).right().startIndex());
-		assertEquals("Operator is a multiplication", "*", ((ExpressionEvaluator.MultiplicationExpression)operation).right().operator());
+		assertEquals("It should extend to index 11 of input.", 11, ((ExpressionParser.MultiplicationExpression)operation).right().endIndex());
+		assertEquals("Operator should be at index 7 of input", 7, ((ExpressionParser.MultiplicationExpression)operation).right().startIndex());
+		assertEquals("Operator is a multiplication", "*", ((ExpressionParser.MultiplicationExpression)operation).right().operator());
 	}
 
 	@Test
 	public void testNextAdditionOperation()
 	{
 		final String expressionText = "10 - 5 + -6 - -20";
-		final ExpressionEvaluator.Expression expressionTree = ExpressionEvaluator.parse(expressionText);
-		final ExpressionEvaluator.Expression operation = ExpressionTreeHelper.nextOperation(expressionTree);
+		final ExpressionParser.Expression expressionTree = ExpressionParser.parse(expressionText);
+		final ExpressionParser.Expression operation = ExpressionTreeHelper.nextOperation(expressionTree);
 
 		assertNotNull("There should be an operation", operation);
-		assertTrue("It should be an addition operation", operation instanceof ExpressionEvaluator.AdditionExpression);
+		assertTrue("It should be an addition operation", operation instanceof ExpressionParser.AdditionExpression);
 		assertEquals("It should start at index 0 of input", 0, operation.startIndex());
-		assertEquals("It should extend to index 6 of input.", 6, ((ExpressionEvaluator.AdditionExpression)operation).right().endIndex());
-		assertEquals("Operator should be at index 3 of input", 3, ((ExpressionEvaluator.AdditionExpression)operation).right().startIndex());
-		assertEquals("Operator is a subtraction", "-", ((ExpressionEvaluator.AdditionExpression)operation).right().operator());
+		assertEquals("It should extend to index 6 of input.", 6, ((ExpressionParser.AdditionExpression)operation).right().endIndex());
+		assertEquals("Operator should be at index 3 of input", 3, ((ExpressionParser.AdditionExpression)operation).right().startIndex());
+		assertEquals("Operator is a subtraction", "-", ((ExpressionParser.AdditionExpression)operation).right().operator());
 	}
 
 }

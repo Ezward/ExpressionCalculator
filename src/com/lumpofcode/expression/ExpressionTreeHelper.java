@@ -1,6 +1,12 @@
 package com.lumpofcode.expression;
 
+import com.lumpofcode.collection.tuple.Tuple2;
 import com.lumpofcode.utils.NumberFormatter;
+
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * NOTE: this code ignores exponentiation.
@@ -23,12 +29,12 @@ public final class ExpressionTreeHelper
 		//
 		// parse the incoming expression text
 		//
-		final ExpressionEvaluator.Expression expression = ExpressionEvaluator.parse(theExpressionText);
+		final ExpressionParser.Expression expression = ExpressionParser.parse(theExpressionText);
 
 		//
 		// determine the highest order operation to evaluate
 		//
-		ExpressionEvaluator.Expression operation = nextOperation(expression);
+		ExpressionParser.Expression operation = nextOperation(expression);
 		if(null == operation)
 		{
 			// nothing to evaluate
@@ -38,31 +44,32 @@ public final class ExpressionTreeHelper
 		//
 		// if it is parenthesis, then the operation is inside the parenthesis
 		//
-		ExpressionEvaluator.ParenthesisExpression outerParenthesis = null;
-		if(operation instanceof ExpressionEvaluator.ParenthesisExpression)
+		ExpressionParser.ParenthesisExpression outerParenthesis = null;
+		if(operation instanceof ExpressionParser.ParenthesisExpression)
 		{
-			outerParenthesis = (ExpressionEvaluator.ParenthesisExpression)operation;
+			outerParenthesis = (ExpressionParser.ParenthesisExpression)operation;
 			operation = nextOperation(outerParenthesis.innerExpression());
 		}
 
 		//
 		// this should be either a literal value or a chained expression
 		//
-		if(operation instanceof ExpressionEvaluator.ChainedExpression)
+		if(operation instanceof ExpressionParser.ChainedExpression)
 		{
 			//
 			// evaluate the first operation in the chain of operations
 			//
-			final ExpressionEvaluator.ChainedExpression chainedExpression = (ExpressionEvaluator.ChainedExpression)operation;
+			final ExpressionParser.ChainedExpression chainedExpression = (ExpressionParser.ChainedExpression)operation;
 			final double leftOperand = chainedExpression.left().evaluate();
 			final double rightOperand = chainedExpression.right().expression().evaluate();
 			final String operator = chainedExpression.right().operator();
 			final double theResult = evaluateBinaryOperation(leftOperand, operator, rightOperand);
 
-			// If the chained expression results in a literal and we are inside parenthesis, remove the parenthesis.
+			// If the chained expression results in a literal and we are inside parenthesis,
+			// then remove the parenthesis.
 			if((null != outerParenthesis) && (null == chainedExpression.right().next()))
 			{
-				return insertWithin(
+				return spliceResult(
 					theExpressionText,
 					outerParenthesis.startIndex(),
 					outerParenthesis.endIndex(),
@@ -72,29 +79,33 @@ public final class ExpressionTreeHelper
 			//
 			// replace the first operation in the chained expression
 			//
-			return insertWithin(
+			return spliceResult(
 				theExpressionText,
 				chainedExpression.left().startIndex(),
 				chainedExpression.right().endIndex(),
 				formatter.format(theResult));
 		}
-		else if(operation instanceof ExpressionEvaluator.NumberExpression)   // it is a literal value
+		else if(operation instanceof ExpressionParser.NumberExpression)   // it is a literal value
 		{
-			final ExpressionEvaluator.NumberExpression numberExpression = (ExpressionEvaluator.NumberExpression)operation;
+			final ExpressionParser.NumberExpression numberExpression = (ExpressionParser.NumberExpression)operation;
 
-			// If the operation is a literal inside parenthesis, then replace parenthesis with the literal
+			// If the operation is a literal inside parenthesis,
+			// then replace parenthesis with the literal
 			if(null != outerParenthesis)
 			{
-				return insertWithin(
+				return spliceResult(
 					theExpressionText,
 					outerParenthesis.startIndex(),
 					outerParenthesis.endIndex(),
 					numberExpression.number()); // this maintains the number as input
 			}
+
+			// fall through - literal does not need to be evaluated
 		}
 		else
 		{
-			throw new RuntimeException("Unexpected expression enountered in evaluateNextOperation()");
+			// this code does not yet support exponentiations
+			throw new RuntimeException("Unexpected expression encountered in evaluateNextOperation()");
 		}
 
 		return theExpressionText;
@@ -107,7 +118,7 @@ public final class ExpressionTreeHelper
 	 * @param expression
 	 * @return the expression to evaluate or null if there are no more operations.
 	 */
-	public static ExpressionEvaluator.Expression nextOperation(final ExpressionEvaluator.Expression expression)
+	public static ExpressionParser.Expression nextOperation(final ExpressionParser.Expression expression)
 	{
 		//
 		// 1. find the left most set of parenthesis
@@ -117,7 +128,7 @@ public final class ExpressionTreeHelper
 		// 4. if there is only a number, then evaluation is complete
 		//
 
-		ExpressionEvaluator.Expression operation = findParenthesis(expression);
+		ExpressionParser.Expression operation = findParenthesis(expression);
 		if(null == operation)
 		{
 			operation = findMultiplication(expression);
@@ -129,15 +140,18 @@ public final class ExpressionTreeHelper
 		return operation;
 	}
 
-	private static ExpressionEvaluator.ParenthesisExpression findParenthesis(final ExpressionEvaluator.Expression expression)
+	//
+	// find the left-most, inner-most parenthesis
+	//
+	private static ExpressionParser.ParenthesisExpression findParenthesis(final ExpressionParser.Expression expression)
 	{
-		if(expression instanceof ExpressionEvaluator.ParenthesisExpression)
+		if(expression instanceof ExpressionParser.ParenthesisExpression)
 		{
 			//
 			// look for parenthesis within the parenthesis
 			//
-			ExpressionEvaluator.ParenthesisExpression parenthesis = (ExpressionEvaluator.ParenthesisExpression)expression;
-			ExpressionEvaluator.ParenthesisExpression innerParenthesis = findParenthesis(parenthesis.innerExpression());
+			ExpressionParser.ParenthesisExpression parenthesis = (ExpressionParser.ParenthesisExpression)expression;
+			ExpressionParser.ParenthesisExpression innerParenthesis = findParenthesis(parenthesis.innerExpression());
 			while(null != innerParenthesis)
 			{
 				parenthesis = innerParenthesis;
@@ -151,19 +165,19 @@ public final class ExpressionTreeHelper
 		// if it is a chained expression (series of additons or multiplications)
 		// then look in each operand, left to right, for parenthesis
 		//
-		if(expression instanceof ExpressionEvaluator.ChainedExpression)
+		if(expression instanceof ExpressionParser.ChainedExpression)
 		{
 			//
 			// look in each operand for a parenthesis expression
 			//
-			ExpressionEvaluator.ChainedExpression chainedExpression = (ExpressionEvaluator.ChainedExpression)expression;
-			ExpressionEvaluator.ParenthesisExpression parenthesisExpression = findParenthesis(chainedExpression.left());
+			ExpressionParser.ChainedExpression chainedExpression = (ExpressionParser.ChainedExpression)expression;
+			ExpressionParser.ParenthesisExpression parenthesisExpression = findParenthesis(chainedExpression.left());
 			if(null != parenthesisExpression)
 			{
 				return parenthesisExpression;
 			}
 
-			ExpressionEvaluator.RightExpression rightExpression = chainedExpression.right();
+			ExpressionParser.RightExpression rightExpression = chainedExpression.right();
 			while (null != rightExpression)
 			{
 				parenthesisExpression = findParenthesis(rightExpression.expression());
@@ -181,34 +195,37 @@ public final class ExpressionTreeHelper
 		return null;
 	}
 
-	private static ExpressionEvaluator.MultiplicationExpression findMultiplication(final ExpressionEvaluator.Expression expression)
+	//
+	// find the left most multiplication
+	//
+	private static ExpressionParser.MultiplicationExpression findMultiplication(final ExpressionParser.Expression expression)
 	{
-		if(expression instanceof ExpressionEvaluator.MultiplicationExpression)
+		if(expression instanceof ExpressionParser.MultiplicationExpression)
 		{
-			return (ExpressionEvaluator.MultiplicationExpression)expression;
+			return (ExpressionParser.MultiplicationExpression)expression;
 		}
 
 		//
 		// recursively look inside parenthesis
 		//
-		if(expression instanceof ExpressionEvaluator.ParenthesisExpression)
+		if(expression instanceof ExpressionParser.ParenthesisExpression)
 		{
-			ExpressionEvaluator.ParenthesisExpression parenthesisExpression = (ExpressionEvaluator.ParenthesisExpression)expression;
+			ExpressionParser.ParenthesisExpression parenthesisExpression = (ExpressionParser.ParenthesisExpression)expression;
 			return findMultiplication(parenthesisExpression.innerExpression());
 		}
 
-		if(expression instanceof ExpressionEvaluator.AdditionExpression)
+		if(expression instanceof ExpressionParser.AdditionExpression)
 		{
 			//
 			// look in each operator for a multiplication
 			//
-			ExpressionEvaluator.AdditionExpression additionExpression = (ExpressionEvaluator.AdditionExpression)expression;
-			ExpressionEvaluator.MultiplicationExpression multiplicationExpression = findMultiplication(additionExpression.left());
+			ExpressionParser.AdditionExpression additionExpression = (ExpressionParser.AdditionExpression)expression;
+			ExpressionParser.MultiplicationExpression multiplicationExpression = findMultiplication(additionExpression.left());
 			if(null != multiplicationExpression)
 			{
 				return multiplicationExpression;
 			}
-			ExpressionEvaluator.RightExpression rightExpression = additionExpression.right();
+			ExpressionParser.RightExpression rightExpression = additionExpression.right();
 			while(null != rightExpression)
 			{
 				multiplicationExpression = findMultiplication(rightExpression.expression());
@@ -226,34 +243,37 @@ public final class ExpressionTreeHelper
 		return null;
 	}
 
-	private static ExpressionEvaluator.AdditionExpression findAddition(final ExpressionEvaluator.Expression expression)
+	//
+	// find the left-most addition
+	//
+	private static ExpressionParser.AdditionExpression findAddition(final ExpressionParser.Expression expression)
 	{
-		if(expression instanceof ExpressionEvaluator.AdditionExpression)
+		if(expression instanceof ExpressionParser.AdditionExpression)
 		{
-			return (ExpressionEvaluator.AdditionExpression)expression;
+			return (ExpressionParser.AdditionExpression)expression;
 		}
 
 		//
 		// recursively look inside parenthesis
 		//
-		if(expression instanceof ExpressionEvaluator.ParenthesisExpression)
+		if(expression instanceof ExpressionParser.ParenthesisExpression)
 		{
-			ExpressionEvaluator.ParenthesisExpression parenthesisExpression = (ExpressionEvaluator.ParenthesisExpression)expression;
+			ExpressionParser.ParenthesisExpression parenthesisExpression = (ExpressionParser.ParenthesisExpression)expression;
 			return findAddition(parenthesisExpression.innerExpression());
 		}
 
-		if(expression instanceof ExpressionEvaluator.MultiplicationExpression)
+		if(expression instanceof ExpressionParser.MultiplicationExpression)
 		{
 			//
 			// look in each operator for an addition
 			//
-			ExpressionEvaluator.MultiplicationExpression multiplicationExpression = (ExpressionEvaluator.MultiplicationExpression)expression;
-			ExpressionEvaluator.AdditionExpression additionExpression = findAddition(multiplicationExpression.left());
+			ExpressionParser.MultiplicationExpression multiplicationExpression = (ExpressionParser.MultiplicationExpression)expression;
+			ExpressionParser.AdditionExpression additionExpression = findAddition(multiplicationExpression.left());
 			if(null != additionExpression)
 			{
 				return additionExpression;
 			}
-			ExpressionEvaluator.RightExpression rightExpression = multiplicationExpression.right();
+			ExpressionParser.RightExpression rightExpression = multiplicationExpression.right();
 			while(null != rightExpression)
 			{
 				additionExpression = findAddition(rightExpression.expression());
@@ -299,7 +319,7 @@ public final class ExpressionTreeHelper
 	 * @param theInsertText the text to insert
 	 * @return
 	 */
-	private static String insertWithin(final String theSourceText, final int leftIndex, final int rightIndex, final String theInsertText)
+	private static String spliceResult(final String theSourceText, final int leftIndex, final int rightIndex, final String theInsertText)
 	{
 		final String theResultExpressionText =
 			theSourceText.substring(0, leftIndex)
@@ -309,7 +329,117 @@ public final class ExpressionTreeHelper
 		//
 		// parse and reformat in a regular way
 		//
-		return ExpressionEvaluator.parse(theResultExpressionText).format();
+		return ExpressionParser.parse(theResultExpressionText).format();
 	}
+
+	/**
+	 * Given an expression, generate all equivalent expressions based on
+	 * the rules of commutivity.
+	 *
+	 * @param theExpressionText
+	 * @param formatter
+	 * @return
+	 */
+/*
+	public static Set<String> generateCommutedExpressions(
+		final String theExpressionText,
+		final NumberFormatter formatter)
+	{
+		return generateCommutedExpressions(theExpressionText, formatter, new HashSet<>());
+	}
+
+	public static Set<String> generateCommutedExpressions(
+		final String theExpressionText,
+		final NumberFormatter formatter,
+		final Set<String> accumulator)
+	{
+		final ExpressionParser.Expression expression = ExpressionParser.parse(theExpressionText);
+
+		//
+		// once we are down to a literal number, we are done
+		//
+		if(expression instanceof ExpressionParser.NumberExpression)
+		{
+			accumulator.add(expression.format());
+			return accumulator;
+		}
+
+		if(expression instanceof ExpressionParser.ParenthesisExpression)
+		{
+			final ExpressionParser.ParenthesisExpression parenthesisExpression = (ExpressionParser.ParenthesisExpression)expression;
+			final Set<String> innerExpressions = generateCommutedExpressions(parenthesisExpression.format(), formatter, new HashSet<>());
+
+			//
+			// the result is the commuted expressions inside parenthesis
+			//
+			final Set<String> result = new HashSet<>(); // copy
+			for(String s : innerExpressions)
+			{
+				result.add("(" + s + ")");
+			}
+
+			return result;
+		}
+
+		if(expression instanceof ExpressionParser.ChainedExpression)
+		{
+			//
+			// we can commute around multiplication and addition
+			//
+			final ExpressionParser.ChainedExpression chainedExpression = (ExpressionParser.ChainedExpression)expression;
+
+			//
+			// get all the possible commutations of the left expression
+			//
+			final Set<String> leftCommuted = generateCommutedExpressions(chainedExpression.left().format(), formatter, new HashSet<>());
+
+			//
+			// add all commutations of the left operand
+			//
+			Set<String> leftCommutations = leftCommuted;
+			for(String s : leftCommutations)
+			{
+				accumulator.add(spliceResult(
+					theExpressionText,
+					chainedExpression.startIndex(),
+					chainedExpression.endIndex(),
+					s);
+			}
+
+
+			final List<Tuple2<ExpressionParser.RightExpression, Set<String>>> rightCommuted = new LinkedList<>();
+			ExpressionParser.RightExpression rightExpression = chainedExpression.right();
+			while(null != rightExpression)
+			{
+				//
+				// generate all possible commutations for this part of chained expression
+				//
+				rightCommuted.add(
+					new Tuple2<ExpressionParser.RightExpression, Set<String>>(
+						rightExpression,
+						generateCommutedExpressions(rightExpression.expression().format(), formatter, new HashSet<>())));
+
+				rightExpression = rightExpression.next();
+			}
+
+			//
+			// now walk the list of operations and decide which ones can commute
+			//
+			rightExpression = chainedExpression.right();
+			while(null != rightExpression)
+			{
+				//
+				// add all commutations of right operand
+				//
+				Set<String> commutations = new HashSet<>();
+				for(String s : leftCommutations)
+				{
+					commutations.add(s + " " + rightExpression.operator() + " " )
+				}
+			}
+		}
+
+	}
+*/
 
 }
