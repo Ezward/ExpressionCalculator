@@ -2,8 +2,6 @@ package com.lumpofcode.collection.list;
 
 import com.lumpofcode.annotation.NotNull;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -140,6 +138,20 @@ public final class LinkList<T>
         if (null == list) throw new IllegalArgumentException();
 
         return list.append(this); // reverse the order to turn this into an append
+    }
+
+    /**
+     * Insert an element at the given index in the list
+     *
+     * @param element the element to insert
+     * @param index the index to insert at
+     * @return new list with the element inserted
+     * @throws if index > length
+     */
+    public LinkList<T> insertAt(final T element, final int index)
+    {
+        if(index > 0) return new LinkList(this.head, this.tail.insertAt(element, index - 1));
+        return this.insert(element);
     }
 
     /**
@@ -345,6 +357,27 @@ public final class LinkList<T>
     }
 
     /**
+     * Get the sublist starting at the nth element.
+     *
+     * @param n
+     * @return list starting at nth element or Nil if n >= length
+     */
+    public LinkList<T> nth(final int n)
+    {
+//        if(this.isEmpty()) return this;
+//        if(n <= 0) return this;
+//
+//        return this.tail.nth(n - 1);
+
+        LinkList<T> list = this;
+        for(int i = n; (i > 0) && list.isNotEmpty(); i -= 1)
+        {
+            list = list.tail;
+        }
+        return list;
+    }
+
+    /**
      * Determine if two lists are equal.
      * Two lists if all elements in the same order and are equal.
      *
@@ -417,7 +450,34 @@ public final class LinkList<T>
         return result;
     }
 
+/*
     // TODO: implement persistent sets using BinaryTree so we don't need Java mutable Set
+    //
+    // Generates factorial(n) permutations of an n length list
+    //
+    // a b c d
+    // a b d c
+    // a c b d
+    // a c d b
+    // a d b c
+    // a d c b
+    // b a c d
+    // b a d c
+    // b c a d
+    // b c d a
+    // c a b d
+    // c a d b
+    // c b a d
+    // c b d a
+    // c d a b
+    // c d b a
+    // d a b c
+    // d a c b
+    // d b a c
+    // d b c a
+    // d c a b
+    // d c b a
+    //
     public Set<LinkList<T>> permutations()
     {
         Set<LinkList<T>> results = new HashSet<>();
@@ -451,5 +511,25 @@ public final class LinkList<T>
         }
         return results;
     }
+*/
 
+    @Override
+    public String toString()
+    {
+        final StringBuilder builder = new StringBuilder();
+        builder.append('[');
+        if(this.isNotEmpty())
+        {
+            builder.append(this.head.toString());
+            LinkList list = this.tail;
+            while (list.isNotEmpty())
+            {
+                builder.append(':').append(list.head.toString());
+                list = list.tail;
+            }
+        }
+        builder.append(']');
+
+        return builder.toString();
+    }
 }

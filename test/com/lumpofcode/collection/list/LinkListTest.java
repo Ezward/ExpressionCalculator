@@ -258,4 +258,5 @@ public class LinkListTest
         assertTrue("first item in filtered list is 1", 1 == removed.head);
         assertTrue("second item in filtered list is 3", 3 == removed.tail.head);
     }
+
 }
