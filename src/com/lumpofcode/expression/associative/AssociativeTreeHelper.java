@@ -1,13 +1,9 @@
 package com.lumpofcode.expression.associative;
 
 import com.lumpofcode.collection.list.LinkList;
-import com.lumpofcode.collection.list.LinkLists;
-import com.lumpofcode.collection.tuple.Tuple2;
 import com.lumpofcode.utils.NumberFormatter;
 
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import static com.lumpofcode.expression.associative.AssociativeExpressionEvaluator.parse;
@@ -107,36 +103,40 @@ public class AssociativeTreeHelper
 		 */
 
         if((expression instanceof AssociativeExpressionEvaluator.MultiplicationExpression)
-            || (expression instanceof AssociativeExpressionEvaluator.MultiplicationExpression))
+            || (expression instanceof AssociativeExpressionEvaluator.AdditionExpression))
         {
             //
             // we can commute around multiplication and addition
             //
             final AssociativeExpressionEvaluator.ChainedExpression chainedExpression = (AssociativeExpressionEvaluator.ChainedExpression)expression;
 
-            // TODO: we have a type issue in the evaluator; here we need to use Object and case.  This must be fixed.  Don't put ? extends Expression is puplic return types
-
+            //
+            // TODO: 1. Get all possible permutations of the left most operand
+            // TODO: 2. Get all possible permutations of the right operands
+            // TODO: 3. combine them to get all permutations of all operands
+            //
 
             //
             // get all the possible permutations of the operands
             //
-            final Set permutations
+            final Set<LinkList<AssociativeExpressionEvaluator.Expression>> permutations
                     = chainedExpression.operands().permutations();
 
             //
             // add all purmuations to the accumulator
             //
             Set<String> result = new HashSet<>(accumulator);
-            for(Object permutation : permutations)
+            for(LinkList<AssociativeExpressionEvaluator.Expression> operands : permutations)
             {
-                LinkList<AssociativeExpressionEvaluator.Expression> operands = (LinkList<AssociativeExpressionEvaluator.Expression>)permutation;
-
                 final StringBuilder builder = new StringBuilder();
-                builder.append(operands.head.format());
+
+                builder.append(operands.head.format()); // leftmost operand
                 for(operands = operands.tail; operands.isNotEmpty(); operands = operands.tail)
                 {
-                    final AssociativeExpressionEvaluator.Expression operand = operands.head;
-                    builder.append(operand.format()).append(' ').append(chainedExpression.operator()).append(' ');
+                    // operator, then operand
+                    builder.append(' ').append(chainedExpression.operator()).append(' ');
+                    builder.append(operands.head.format());
+
                 }
                 result.add(builder.toString());
             }

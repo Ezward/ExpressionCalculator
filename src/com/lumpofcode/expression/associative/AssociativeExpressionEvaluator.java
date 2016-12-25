@@ -186,7 +186,7 @@ public final class AssociativeExpressionEvaluator
 		 *
 		 * @return the chained operands
 		 */
-		LinkList<? extends Expression> operands();
+		LinkList<Expression> operands();
 
 		/**
 		 * Get the leftmost operand in the chained expression.
@@ -200,7 +200,7 @@ public final class AssociativeExpressionEvaluator
 		 *
 		 * @return immutable list of operands to the right of the first operator
 		 */
-		LinkList<? extends Expression> right();
+		LinkList<Expression> right();
 
 	}
 	
@@ -515,7 +515,7 @@ public final class AssociativeExpressionEvaluator
 			//
 			// collect sequential divisions
 			//
-			LinkList<ExpressionNode> theOperands = new LinkList<ExpressionNode>(theLeftExpression);
+			LinkList<Expression> theOperands = new LinkList<>(theLeftExpression);
 			while((theOperatorIndex < theLength) && divisionOperators.find(theInput.charAt(theOperatorIndex)).isNotEmpty())
 			{
 				// parse the right side
@@ -551,7 +551,7 @@ public final class AssociativeExpressionEvaluator
 			//
 			// collect sequential multiplications
 			//
-			LinkList<ExpressionNode> theOperands = new LinkList<>(theLeftExpression);
+			LinkList<Expression> theOperands = new LinkList<>(theLeftExpression);
 			while((theOperatorIndex < theLength) && multiplicationOperators.find(theInput.charAt(theOperatorIndex)).isNotEmpty())
 			{
 				// parse the right side
@@ -587,7 +587,7 @@ public final class AssociativeExpressionEvaluator
 			//
 			// parse sequential additions
 			//
-			LinkList<ExpressionNode> theOperands = new LinkList(theLeftExpression);
+			LinkList<Expression> theOperands = new LinkList(theLeftExpression);
 			while((theOperatorIndex < theLength) && subtractionOperators.find(theInput.charAt(theOperatorIndex)).isNotEmpty())
 			{
 				// parse the right side
@@ -623,7 +623,7 @@ public final class AssociativeExpressionEvaluator
 			//
 			// parse sequential additions
 			//
-			LinkList<ExpressionNode> theOperands = new LinkList(theLeftExpression);
+			LinkList<Expression> theOperands = new LinkList(theLeftExpression);
 			while((theOperatorIndex < theLength) && additionOperators.find(theInput.charAt(theOperatorIndex)).isNotEmpty())
 			{
 				// parse the right side
@@ -707,9 +707,9 @@ public final class AssociativeExpressionEvaluator
 	@Immutable
 	private static abstract class ChainedExpressionNode extends ExpressionNode implements AssociativeExpressionEvaluator.ChainedExpression
 	{
-		private final LinkList<? extends Expression> operands;
+		private final LinkList<Expression> operands;
 
-		public ChainedExpressionNode(LinkList<? extends Expression> theOperands)
+		public ChainedExpressionNode(LinkList<Expression> theOperands)
 		{
 			super(theOperands.head.startIndex(), theOperands.last().head.endIndex());
 
@@ -723,7 +723,7 @@ public final class AssociativeExpressionEvaluator
 
 
 		@Override
-		public LinkList<? extends Expression> operands() {
+		public LinkList<Expression> operands() {
 			return this.operands;
 		}
 
@@ -731,7 +731,7 @@ public final class AssociativeExpressionEvaluator
 		public final Expression left() { return operands.head; }
 
 		@Override
-		public final LinkList<? extends Expression> right() { return operands.tail; }
+		public final LinkList<Expression> right() { return operands.tail; }
 
 
 		@Override
@@ -766,7 +766,7 @@ public final class AssociativeExpressionEvaluator
 	@Immutable
 	private static final class SubtractionNode extends ChainedExpressionNode implements SubtractionExpression
 	{
-		public SubtractionNode(LinkList<? extends Expression> theOperands)
+		public SubtractionNode(LinkList<Expression> theOperands)
 		{
 			super(theOperands);
 		}
@@ -794,7 +794,7 @@ public final class AssociativeExpressionEvaluator
 	@Immutable
 	private static final class AdditionNode extends ChainedExpressionNode implements AdditionExpression
 	{
-		public AdditionNode(LinkList<? extends Expression> theOperands)
+		public AdditionNode(LinkList<Expression> theOperands)
 		{
 			super(theOperands);
 		}
@@ -826,7 +826,7 @@ public final class AssociativeExpressionEvaluator
 	@Immutable
 	private static final class DivisionNode extends ChainedExpressionNode implements MultiplicationExpression
 	{
-		public DivisionNode(LinkList<? extends Expression> theOperands)
+		public DivisionNode(LinkList<Expression> theOperands)
 		{
 			super(theOperands);
 		}
@@ -857,7 +857,7 @@ public final class AssociativeExpressionEvaluator
 	@Immutable
 	private static final class MultiplicationNode extends ChainedExpressionNode implements MultiplicationExpression
 	{
-		public MultiplicationNode(LinkList<? extends Expression> theOperands)
+		public MultiplicationNode(LinkList<Expression> theOperands)
 		{
 			super(theOperands);
 		}
