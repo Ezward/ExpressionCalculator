@@ -1,11 +1,10 @@
 package com.lumpofcode.expression;
 
-import com.lumpofcode.collection.tuple.Tuple2;
+import com.lumpofcode.expression.associative.AssociativeExpressionEvaluator;
 import com.lumpofcode.utils.NumberFormatter;
 
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -331,115 +330,5 @@ public final class ExpressionTreeHelper
 		//
 		return ExpressionParser.parse(theResultExpressionText).format();
 	}
-
-	/**
-	 * Given an expression, generate all equivalent expressions based on
-	 * the rules of commutivity.
-	 *
-	 * @param theExpressionText
-	 * @param formatter
-	 * @return
-	 */
-/*
-	public static Set<String> generateCommutedExpressions(
-		final String theExpressionText,
-		final NumberFormatter formatter)
-	{
-		return generateCommutedExpressions(theExpressionText, formatter, new HashSet<>());
-	}
-
-	public static Set<String> generateCommutedExpressions(
-		final String theExpressionText,
-		final NumberFormatter formatter,
-		final Set<String> accumulator)
-	{
-		final ExpressionParser.Expression expression = ExpressionParser.parse(theExpressionText);
-
-		//
-		// once we are down to a literal number, we are done
-		//
-		if(expression instanceof ExpressionParser.NumberExpression)
-		{
-			accumulator.add(expression.format());
-			return accumulator;
-		}
-
-		if(expression instanceof ExpressionParser.ParenthesisExpression)
-		{
-			final ExpressionParser.ParenthesisExpression parenthesisExpression = (ExpressionParser.ParenthesisExpression)expression;
-			final Set<String> innerExpressions = generateCommutedExpressions(parenthesisExpression.format(), formatter, new HashSet<>());
-
-			//
-			// the result is the commuted expressions inside parenthesis
-			//
-			final Set<String> result = new HashSet<>(); // copy
-			for(String s : innerExpressions)
-			{
-				result.add("(" + s + ")");
-			}
-
-			return result;
-		}
-
-		if(expression instanceof ExpressionParser.ChainedExpression)
-		{
-			//
-			// we can commute around multiplication and addition
-			//
-			final ExpressionParser.ChainedExpression chainedExpression = (ExpressionParser.ChainedExpression)expression;
-
-			//
-			// get all the possible commutations of the left expression
-			//
-			final Set<String> leftCommuted = generateCommutedExpressions(chainedExpression.left().format(), formatter, new HashSet<>());
-
-			//
-			// add all commutations of the left operand
-			//
-			Set<String> leftCommutations = leftCommuted;
-			for(String s : leftCommutations)
-			{
-				accumulator.add(spliceResult(
-					theExpressionText,
-					chainedExpression.startIndex(),
-					chainedExpression.endIndex(),
-					s);
-			}
-
-
-			final List<Tuple2<ExpressionParser.RightExpression, Set<String>>> rightCommuted = new LinkedList<>();
-			ExpressionParser.RightExpression rightExpression = chainedExpression.right();
-			while(null != rightExpression)
-			{
-				//
-				// generate all possible commutations for this part of chained expression
-				//
-				rightCommuted.add(
-					new Tuple2<ExpressionParser.RightExpression, Set<String>>(
-						rightExpression,
-						generateCommutedExpressions(rightExpression.expression().format(), formatter, new HashSet<>())));
-
-				rightExpression = rightExpression.next();
-			}
-
-			//
-			// now walk the list of operations and decide which ones can commute
-			//
-			rightExpression = chainedExpression.right();
-			while(null != rightExpression)
-			{
-				//
-				// add all commutations of right operand
-				//
-				Set<String> commutations = new HashSet<>();
-				for(String s : leftCommutations)
-				{
-					commutations.add(s + " " + rightExpression.operator() + " " )
-				}
-			}
-		}
-
-	}
-*/
 
 }

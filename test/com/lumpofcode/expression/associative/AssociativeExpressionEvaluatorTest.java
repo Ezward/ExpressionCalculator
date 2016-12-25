@@ -1,5 +1,6 @@
-package com.lumpofcode.expression;
+package com.lumpofcode.expression.associative;
 
+import com.lumpofcode.expression.associative.AssociativeExpressionEvaluator;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

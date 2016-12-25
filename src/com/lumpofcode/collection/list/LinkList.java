@@ -2,6 +2,8 @@ package com.lumpofcode.collection.list;
 
 import com.lumpofcode.annotation.NotNull;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -195,7 +197,6 @@ public final class LinkList<T>
      * If the index is past the end of the list,
      * then the list is returned.
      *
-     * @param list
      * @param index
      * @return list without element at index
      */
@@ -323,6 +324,27 @@ public final class LinkList<T>
     }
 
     /**
+     * Find the given element is the list
+     *
+     * @param element the element to find
+     * @return the subslist that starts with the element
+     *         or Nil if the element is not found.
+     */
+    public LinkList<T> find(final T element)
+    {
+        LinkList<T> thisList = this;
+        while(thisList != Nil)
+        {
+            if(thisList.head.equals(element))
+            {
+                return thisList;
+            }
+            thisList = thisList.tail;
+        }
+        return thisList;
+    }
+
+    /**
      * Determine if two lists are equal.
      * Two lists if all elements in the same order and are equal.
      *
@@ -355,6 +377,9 @@ public final class LinkList<T>
 
         return isEqual((LinkList)that);
     }
+
+    // TODO: calculate hash at construction time, so we don't incur the high with each call.
+    //       this is necessary for performance when used in a Map, Set or ordered collection
 
     /**
      * Hash the list.
@@ -391,4 +416,40 @@ public final class LinkList<T>
         }
         return result;
     }
+
+    // TODO: implement persistent sets using BinaryTree so we don't need Java mutable Set
+    public Set<LinkList<T>> permutations()
+    {
+        Set<LinkList<T>> results = new HashSet<>();
+
+        if(LinkList.Nil == this)
+        {
+            // empty list has zero permutations
+        }
+        else if(LinkList.Nil == this.tail)
+        {
+            // single element list has one permutation
+            results.add(this);
+        }
+        else
+        {
+            final Set<LinkList<T>> tails = this.tail.permutations();
+
+            //
+            // the head and tail have two permutations
+            // add all head + tails
+            // add all tails + head
+            //
+            for (LinkList<T> permutation : tails)
+            {
+                results.add(permutation.insert(this.head));
+            }
+            for (LinkList<T> permutation : tails)
+            {
+                results.add(permutation.append(this.head));
+            }
+        }
+        return results;
+    }
+
 }
