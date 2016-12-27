@@ -22,29 +22,34 @@ public class AssociativeTreeHelper
      * @param formatter
      * @return
      */
-    public static Set<String> generateCommutedExpressions(
+    public static LinkList<String> generateCommutedExpressions(
             final String theExpressionText,
             final NumberFormatter formatter)
     {
         final AssociativeExpressionEvaluator.Expression expression = parse(theExpressionText);
-        final Set<String> result = new HashSet<>();
+        LinkList<String> result = LinkList.Nil;
 
         if(expression instanceof AssociativeExpressionEvaluator.ParenthesisExpression)
         {
             final AssociativeExpressionEvaluator.ParenthesisExpression parenthesisExpression = (AssociativeExpressionEvaluator.ParenthesisExpression)expression;
-            final Set<String> innerExpressions = generateCommutedExpressions(parenthesisExpression.innerExpression().format(), formatter);
+            final LinkList<String> innerExpressions = generateCommutedExpressions(parenthesisExpression.innerExpression().format(), formatter);
 
             //
             // the result is the commuted expressions inside parenthesis
             //
-            for(String s : innerExpressions)
+            for(LinkList e = innerExpressions; e.isNotEmpty(); e = e.tail)
             {
-                result.add("(" + s + ")");
+                result.append("(" + e.head + ")");
             }
         }
         else if((expression instanceof AssociativeExpressionEvaluator.MultiplicationExpression)
             || (expression instanceof AssociativeExpressionEvaluator.AdditionExpression))
         {
+            //
+            // we can commute around multiplication and addition
+            //
+            final AssociativeExpressionEvaluator.ChainedExpression chainedExpression = (AssociativeExpressionEvaluator.ChainedExpression)expression;
+
             /*
                 Here is a simple example, 1 * 2 * 3.  This has factorial(3) = 6 permutations
                 1 * 2 * 3
@@ -54,25 +59,53 @@ public class AssociativeTreeHelper
                 3 * 1 * 2
                 3 * 2 * 1
 
-                We want to generate all the unique permutatinos of the operands and return them.
+                We want to generate all the unique permutations of the operands and return them.
             */
 
 
             //
-            // we can commute around multiplication and addition
+            // 1. recursivevly get permutations of each operand
             //
-            final AssociativeExpressionEvaluator.ChainedExpression chainedExpression = (AssociativeExpressionEvaluator.ChainedExpression)expression;
-
-
-            // 1. Get all possible permutations of the operands
-            final Set<LinkList<AssociativeExpressionEvaluator.Expression>> permutedOperands = LinkLists.permutations(chainedExpression.operands());
-
+            // for 2 * 3 + 4 * 5 we end up with a list of two sets permuted operands
+            //     [["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]]
+            // the first element of the list is the list of the first operand permutations
+            // the second element of the list is the list of the second operand permutations
             //
-            // 2. convert to string and add to result
-            //
-            for(LinkList<AssociativeExpressionEvaluator.Expression> operands : permutedOperands)
+            LinkList<LinkList<String>> permutedOperands = LinkList.Nil;
+            for(LinkList<AssociativeExpressionEvaluator.Expression> operand = chainedExpression.operands(); operand.isNotEmpty(); operand = operand.tail)
             {
-                result.add(AssociativeTreeHelper.formatOperands(operands, chainedExpression.operator(), formatter));
+                permutedOperands.append(generateCommutedExpressions(operand.head.format(), formatter));
+            }
+
+            //
+            // 2. Get all possible permutations of the operands
+            //
+            // for the example, input is [["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]]
+            // the result is a set of two linked lists each with a set of two strings;
+            //     [[["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]], [["4 * 5", "5 * 4"], ["2 * 3", "3 * 2"]]]
+            //
+            LinkList<LinkList<LinkList<String>>> permutedChains = LinkLists.permutations(permutedOperands);
+
+            //
+            // 3. combine operands to produce all possible combinations of permuted operands
+            //    we do this in each set link list and the output is a linked list of operands
+            //    so for  [["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]]
+            //    we get  [["2 * 3", "4 * 5"], ["2 * 3", "5 * 4"], ["3 * 2", "4 * 5"], ["3 * 2", "5 * 4"]]
+            //    and for [["4 * 5", "5 * 4"], ["2 * 3", "3 * 2"]]
+            //    we get  [["4 * 5", "2 * 3"], ["4 * 5", "3 * 2"], ["5 * 4", "2 * 3"], ["5 * 4", "3 * 2"]]
+            //
+            while(permutedChains.isNotEmpty())
+            {
+                //
+                // each element contains a set of permutations for that operand.
+                // they must be combined with all the other oprands to produce
+                // all possible combinations of permuted operands in all possible permuted orders
+                //
+                LinkList<LinkList<String>> listOfOperandPurmutations = permutedChains.head;
+
+//                result.add(AssociativeTreeHelper.formatOperands(operands, chainedExpression.operator(), formatter));
+
+                permutedChains = permutedChains.tail;
             }
         }
         else
@@ -80,7 +113,7 @@ public class AssociativeTreeHelper
             //
             // expression is not commutable (number, subtraction or division), return as is
             //
-            result.add(expression.format());
+            result = result.insert(expression.format());
         }
 
         return result;

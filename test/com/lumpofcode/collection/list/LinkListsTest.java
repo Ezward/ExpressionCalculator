@@ -17,11 +17,11 @@ public class LinkListsTest
     {
         final LinkList<String> list = LinkLists.linkList("A", "B", "C", "D");
 
-        final Set<LinkList<String>> permutations = LinkLists.permutations(list);
+        final LinkList<LinkList<String>> permutations = LinkLists.permutations(list);
 
-        for(LinkList<String> permutation : permutations)
+        for(LinkList<LinkList<String>> permutation = permutations; permutation.isNotEmpty(); permutation = permutation.tail)
         {
-            System.out.println(permutation.toString());
+            System.out.println(permutation.head.toString());
         }
 
         assertEquals("there should be 24 permutations", 24, permutations.size());
@@ -55,12 +55,12 @@ public class LinkListsTest
                 .insert("[D:C:A:B]")
                 .insert("[D:C:B:A]");
 
-        for(LinkList<String> permutation : permutations)
+        for(LinkList<LinkList<String>> permutation = permutations; permutation.isNotEmpty(); permutation = permutation.tail)
         {
-            LinkList<String> first = values.find(permutation.toString());
+            LinkList<String> first = values.find(permutation.head.toString());
             assertTrue("There should be one entry in values for each permutation.", first.isNotEmpty());
 
-            LinkList<String> second = first.tail.find(permutation.toString());
+            LinkList<String> second = first.tail.find(permutation.head.toString());
             assertTrue("There should NOT be more than one entry in values for each permutation.", second.isEmpty());
         }
     }

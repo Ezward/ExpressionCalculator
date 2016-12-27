@@ -2,6 +2,7 @@ package com.lumpofcode.collection.list;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -68,6 +69,15 @@ public final class LinkLists
 //        return theList.head.map(mapper).append(flatmap(theList.tail, theMapper));
     }
 
+    /**
+     * Given a list, create a new list with two elements swapped.
+     *
+     * @param list original list
+     * @param i ith element is moved to jth position
+     * @param j jth element is move to ith position
+     * @param <T> type of elements
+     * @return new list with ith and jth elements swapped
+     */
     public static <T> LinkList<T> swap(LinkList<T> list, int i, int j)
     {
         if(i == j) return list; // nothing to swap
@@ -89,7 +99,7 @@ public final class LinkLists
             int k = 0;
             while ((k < i) && list.isNotEmpty())
             {
-                left.insert(list.head);
+                left = left.insert(list.head);
                 list = list.tail;
             }
             if (list.isNotEmpty())
@@ -102,7 +112,7 @@ public final class LinkLists
                 LinkList<T> middle = LinkList.Nil;
                 while((k < j) && list.isNotEmpty())
                 {
-                    middle.insert(list.head);
+                    middle = middle.insert(list.head);
                     list = list.tail;
                 }
 
@@ -143,35 +153,44 @@ public final class LinkLists
     }
 
     // TODO: implement persistent sets using BinaryTree so we don't need Java mutable Set
-    //
-    // Generates factorial(n) permutations of an n length list
-    //
-    // a b c d
-    // a b d c
-    // a c b d
-    // a c d b
-    // a d b c
-    // a d c b
-    // b a c d
-    // b a d c
-    // b c a d
-    // b c d a
-    // c a b d
-    // c a d b
-    // c b a d
-    // c b d a
-    // c d a b
-    // c d b a
-    // d a b c
-    // d a c b
-    // d b a c
-    // d b c a
-    // d c a b
-    // d c b a
-    //
-    public static final <T> Set<LinkList<T>> permutations(LinkList<T> list)
+
+    /**
+     * Generate factorial(n) permutations of n length list.
+     *
+     * NOTE: this only maintains unique permutations, so
+     *       the output my be less than factorial(n) in size.
+     *       
+     * for instance, given [a b c d] it produces;
+     *     a b c d
+     *     a b d c
+     *     a c b d
+     *     a c d b
+     *     a d b c
+     *     a d c b
+     *     b a c d
+     *     b a d c
+     *     b c a d
+     *     b c d a
+     *     c a b d
+     *     c a d b
+     *     c b a d
+     *     c b d a
+     *     c d a b
+     *     c d b a
+     *     d a b c
+     *     d a c b
+     *     d b a c
+     *     d b c a
+     *     d c a b
+     *     d c b a
+     *
+     * @param list the list to permute
+     * @param <T> the type of elements in the list
+     * @return a set of lists which represent permutations of the input list
+     */
+    public static final <T> LinkList<LinkList<T>> permutations(LinkList<T> list)
     {
-        Set<LinkList<T>> results = new HashSet<>();
+        LinkList<LinkList<T>> results = LinkList.Nil;
 
         if(LinkList.Nil == list)
         {
@@ -180,7 +199,7 @@ public final class LinkLists
         else if(LinkList.Nil == list.tail)
         {
             // single element list has one permutation
-            results.add(list);
+            results = results.insert(list);
         }
         else
         {
@@ -196,20 +215,15 @@ public final class LinkLists
             LinkList<T> left = list;
             while(left.isNotEmpty())
             {
-                final Set<LinkList<T>> right = permutations(list.removeAt(i));
+                LinkList<LinkList<T>> right = permutations(list.removeAt(i));
 
                 //
-                // the head and tail have two permutations
                 // add all head + tails
-                // add all tails + head
                 //
-                for (LinkList<T> permutation : right)
+                while (right.isNotEmpty())
                 {
-                    results.add(permutation.insert(left.head));
-                }
-                for (LinkList<T> permutation : right)
-                {
-                    results.add(permutation.append(left.head));
+                    results = results.insert(right.head.insert(left.head));
+                    right = right.tail;
                 }
 
                 i = i + 1;
@@ -222,5 +236,140 @@ public final class LinkLists
         return results;
     }
 
+    /**
+     * Combine the elements of two lists and return the set of combined lists
+     *
+     * so combine([a, b], [c, d], [e, f]) produces 2^3 = 8 combinations
+     * [[a, c, e], [a, c, f], [a, d, e], [a, d, f], [b, c, e], [b, c, f], [b, d, e] [b, d, f]]
+     *
+     * @param <T>
+     * @return
+     */
+    public static final <T>  LinkList<LinkList<T>> combineElements(final LinkList<LinkList<T>> list)
+    {
+        // TODO: implement combine
+        if(list.isEmpty()) return LinkList.Nil;
+        if(list.tail.isEmpty()) return list;   // no other list elements to combine
+        if(list.tail.tail.isEmpty())
+        {
+            // we have two lists to combine
+            return zip(list.head, list.tail.head);
+        }
+
+        LinkList<LinkList<T>> result = LinkList.Nil;
+        while(list.isNotEmpty())
+        {
+            result = result.insert(zip(list.head, list.tail.head));
+        }
+
+        throw new RuntimeException("TODO: implement combine()");
+    }
+
+    public static final <T> LinkList<LinkList<T>> insertAll(LinkList<T> left, LinkList<LinkList<T>> right)
+    {
+        LinkList<LinkList<T>> result = LinkList.Nil;
+
+        while(left.isNotEmpty() && right.isNotEmpty())
+        {
+            result = result.insert(right.head.insert(left.head));
+
+            left = left.tail;
+            right = right.tail;
+        }
+
+        return result;
+    }
+
+    public static final <T> LinkList<LinkList<T>> appendAll(LinkList<LinkList<T>> left, LinkList<T> right)
+    {
+        LinkList<LinkList<T>> result = LinkList.Nil;
+
+        while(left.isNotEmpty() && right.isNotEmpty())
+        {
+            result = result.append(left.head.append(right.head));
+
+            left = left.tail;
+            right = right.tail;
+        }
+
+        return result;
+    }
+
+    /**
+     * Combine the element with each element in the list to create a list of lists.
+     * so combine("A", [["B", "C", "D"], ["E", "F", "G"]]) returns
+     *     [["A", "B", "C", "D"], ["A", "E", "F", "G"]]
+     *
+     * @param element
+     * @param list
+     * @param <T>
+     * @return
+     */
+    public static final <T> LinkList<LinkList<T>> insertIntoAll(final T element, final LinkList<LinkList<T>> list)
+    {
+        LinkList<LinkList<T>> result = LinkList.Nil;
+
+        while(list.isNotEmpty())
+        {
+            result = result.insert(list.head.insert(element));
+        }
+
+        return result;
+    }
+
+    /**
+     * Combine the elements of two lists.
+     * this is like 'zip' but the output is a list of lists
+     * rather than a list of Tuple2.
+     *
+     * @param left
+     * @param right
+     * @param <T>
+     * @return
+     */
+    public static final <T> LinkList<LinkList<T>> zip(final LinkList<T> left, final LinkList<T> right)
+    {
+        //
+        // TODO: this is not correct, [[a, b], [c,d]] should produce [[a, c], [b, d]]
+        //
+        LinkList<LinkList<T>> result = LinkList.Nil;
+        for(LinkList<T> x = left; x.isNotEmpty(); x = x.tail)
+        {
+            result = result.insert(combineByElement(left.head, right));
+        }
+
+
+
+        return result;
+    }
+
+    public static final <T> T combine(final T accumulator, final LinkList<T> list, BiFunction<T, T, T> operation)
+    {
+        if(list.isEmpty()) return accumulator;
+
+        return combine(operation.apply(accumulator, list.head), list.tail, operation);
+    }
+
+    /**
+     * Combine the element with each element in the list to create a list of lists.
+     * so combine("A", ["B", "C"]) returns
+     *     [["A", "B"], ["A", "C"]]
+     *
+     * @param element
+     * @param list
+     * @param <T>
+     * @return
+     */
+    public static final <T> LinkList<LinkList<T>> combineByElement(final T element, final LinkList<T> list)
+    {
+        LinkList result = LinkList.Nil;
+
+        while(list.isNotEmpty())
+        {
+            result = result.insert(LinkLists.linkList(element, list.head));
+        }
+
+        return result;
+    }
 
 }
