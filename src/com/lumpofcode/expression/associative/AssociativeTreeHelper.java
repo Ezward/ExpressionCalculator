@@ -39,7 +39,7 @@ public class AssociativeTreeHelper
             //
             for(LinkList e = innerExpressions; e.isNotEmpty(); e = e.tail)
             {
-                result.append("(" + e.head + ")");
+                result = result.append("(" + e.head + ")");
             }
         }
         else if((expression instanceof AssociativeExpressionEvaluator.MultiplicationExpression)
@@ -74,7 +74,7 @@ public class AssociativeTreeHelper
             LinkList<LinkList<String>> permutedOperands = LinkList.Nil;
             for(LinkList<AssociativeExpressionEvaluator.Expression> operand = chainedExpression.operands(); operand.isNotEmpty(); operand = operand.tail)
             {
-                permutedOperands.append(generateCommutedExpressions(operand.head.format(), formatter));
+                permutedOperands = permutedOperands.append(generateCommutedExpressions(operand.head.format(), formatter));
             }
 
             //
@@ -101,9 +101,19 @@ public class AssociativeTreeHelper
                 // they must be combined with all the other oprands to produce
                 // all possible combinations of permuted operands in all possible permuted orders
                 //
-                LinkList<LinkList<String>> listOfOperandPurmutations = permutedChains.head;
+                final LinkList<LinkList<String>> listOfOperandPurmutations = permutedChains.head;
+                LinkList<LinkList<String>> listOfOperandCombinations =
+                    LinkLists.combinations(listOfOperandPurmutations);
 
-//                result.add(AssociativeTreeHelper.formatOperands(operands, chainedExpression.operator(), formatter));
+                while(listOfOperandCombinations.isNotEmpty())
+                {
+                    result = result.insert(
+                        AssociativeTreeHelper.formatStringOperands(
+                            listOfOperandCombinations.head,
+                            chainedExpression.operator()));
+
+                    listOfOperandCombinations = listOfOperandCombinations.tail;
+                }
 
                 permutedChains = permutedChains.tail;
             }
@@ -165,5 +175,23 @@ public class AssociativeTreeHelper
 
         return builder.toString();
     }
+
+    private static String formatStringOperands(LinkList<String> operands, final String operator)
+    {
+        final StringBuilder builder = new StringBuilder();
+
+        builder.append(operands.head); // leftmost operand
+        for(operands = operands.tail; operands.isNotEmpty(); operands = operands.tail)
+        {
+            // operator
+            builder.append(' ').append(operator).append(' ');
+
+            // operand
+            builder.append(operands.head);
+        }
+
+        return builder.toString();
+    }
+
 
 }

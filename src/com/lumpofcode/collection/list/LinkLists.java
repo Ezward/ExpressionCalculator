@@ -1,8 +1,5 @@
 package com.lumpofcode.collection.list;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -237,7 +234,8 @@ public final class LinkLists
     }
 
     /**
-     * Combine the elements of two lists and return the set of combined lists
+     * Create all combinations of the elements of two lists and
+     * return the set of combinations
      *
      * so combine([a, b], [c, d], [e, f]) produces 2^3 = 8 combinations
      * [[a, c, e], [a, c, f], [a, d, e], [a, d, f], [b, c, e], [b, c, f], [b, d, e] [b, d, f]]
@@ -245,82 +243,96 @@ public final class LinkLists
      * @param <T>
      * @return
      */
-    public static final <T>  LinkList<LinkList<T>> combineElements(final LinkList<LinkList<T>> list)
+    public static final <T>  LinkList<LinkList<T>> combinations(final LinkList<LinkList<T>> list)
     {
-        // TODO: implement combine
-        if(list.isEmpty()) return LinkList.Nil;
-        if(list.tail.isEmpty()) return list;   // no other list elements to combine
-        if(list.tail.tail.isEmpty())
-        {
-            // we have two lists to combine
-            return zip(list.head, list.tail.head);
-        }
-
-        LinkList<LinkList<T>> result = LinkList.Nil;
-        while(list.isNotEmpty())
-        {
-            result = result.insert(zip(list.head, list.tail.head));
-        }
-
-        throw new RuntimeException("TODO: implement combine()");
+        return innerCombine(list, LinkList.Nil);
     }
 
-    public static final <T> LinkList<LinkList<T>> insertAll(LinkList<T> left, LinkList<LinkList<T>> right)
+    //
+    // private recursive helper that takes an accumulator
+    //
+    private static final <T>  LinkList<LinkList<T>> innerCombine(final LinkList<LinkList<T>> list, final LinkList<LinkList<T>> accumulator)
     {
-        LinkList<LinkList<T>> result = LinkList.Nil;
-
-        while(left.isNotEmpty() && right.isNotEmpty())
+        if(list.isEmpty())
         {
-            result = result.insert(right.head.insert(left.head));
-
-            left = left.tail;
-            right = right.tail;
+            return accumulator;
         }
 
-        return result;
+        // we have at least two lists to combine
+        return innerCombine(list.tail, combineAppend(accumulator, list.head));
     }
 
-    public static final <T> LinkList<LinkList<T>> appendAll(LinkList<LinkList<T>> left, LinkList<T> right)
-    {
-        LinkList<LinkList<T>> result = LinkList.Nil;
-
-        while(left.isNotEmpty() && right.isNotEmpty())
-        {
-            result = result.append(left.head.append(right.head));
-
-            left = left.tail;
-            right = right.tail;
-        }
-
-        return result;
-    }
-
-    /**
-     * Combine the element with each element in the list to create a list of lists.
-     * so combine("A", [["B", "C", "D"], ["E", "F", "G"]]) returns
-     *     [["A", "B", "C", "D"], ["A", "E", "F", "G"]]
+	/**
+     * Create all combinations of appending the list elements to
+     * the lists in the accumulator.
      *
-     * @param element
+     * So combineAppend([['a', 'b', 'c'], ['d', 'e', 'f']], ['1', '2', '3'])
+     * produces [['a', 'b', 'c', '1'], ['a', 'b', 'c', '2'], ['a', 'b', 'c', '3'],
+     *           ['d', 'e', 'f', '1'], ['d', 'e', 'f', '2'], ['d', 'e', 'f', '3']]
+     *
+     * @param accumulator
      * @param list
      * @param <T>
      * @return
      */
-    public static final <T> LinkList<LinkList<T>> insertIntoAll(final T element, final LinkList<LinkList<T>> list)
+    public static final <T>  LinkList<LinkList<T>> combineAppend(final LinkList<LinkList<T>> accumulator, final LinkList<T> list)
     {
-        LinkList<LinkList<T>> result = LinkList.Nil;
-
-        while(list.isNotEmpty())
+        if(list.isEmpty())
         {
-            result = result.insert(list.head.insert(element));
+            return accumulator;
         }
 
-        return result;
+        if(accumulator.isEmpty())
+        {
+            return LinkLists.split(list);
+        }
+
+        //
+        // generate all the combinations of appending elements of list
+        // to the lists in accumulator.
+        //
+        LinkList<LinkList<T>> combinations = LinkList.Nil;
+        for(LinkList<LinkList<T>> a = accumulator; a.isNotEmpty(); a = a.tail)
+        {
+            for(LinkList<T> l = list; l.isNotEmpty(); l = l.tail)
+            {
+                combinations = combinations.insert(a.head.append(l.head));
+            }
+        }
+
+        return combinations;
     }
+
+	/**
+     * Split a list into a list of lists by element.
+     *
+     * split([1, 2, 3]) yields [[1], [2], [3]]
+     *
+     * @param list
+     * @param <T>
+     * @return
+     */
+    public static final <T> LinkList<LinkList<T>> split(LinkList<T> list)
+    {
+        LinkList<LinkList<T>> result = LinkList.Nil;
+        while(list.isNotEmpty())
+        {
+            result = result.insert(new LinkList<T>(list.head));
+            list = list.tail;
+        }
+
+        return result.reverse();
+    }
+
 
     /**
      * Combine the elements of two lists.
      * this is like 'zip' but the output is a list of lists
-     * rather than a list of Tuple2.
+     * rather than a list of Tuple2, so the lists
+     * must be of the same type.
+     *
+     * zip(['a', 'b', 'c'], ['d', 'e', 'f'])
+     * produces [['a', 'd'], ['b', 'e'], ['c', 'f']]
      *
      * @param left
      * @param right
@@ -329,47 +341,13 @@ public final class LinkLists
      */
     public static final <T> LinkList<LinkList<T>> zip(final LinkList<T> left, final LinkList<T> right)
     {
-        //
-        // TODO: this is not correct, [[a, b], [c,d]] should produce [[a, c], [b, d]]
-        //
         LinkList<LinkList<T>> result = LinkList.Nil;
-        for(LinkList<T> x = left; x.isNotEmpty(); x = x.tail)
+        while(left.isNotEmpty() && right.isNotEmpty())
         {
-            result = result.insert(combineByElement(left.head, right));
+            result = result.insert(LinkLists.linkList(left, right));
         }
 
-
-
-        return result;
-    }
-
-    public static final <T> T combine(final T accumulator, final LinkList<T> list, BiFunction<T, T, T> operation)
-    {
-        if(list.isEmpty()) return accumulator;
-
-        return combine(operation.apply(accumulator, list.head), list.tail, operation);
-    }
-
-    /**
-     * Combine the element with each element in the list to create a list of lists.
-     * so combine("A", ["B", "C"]) returns
-     *     [["A", "B"], ["A", "C"]]
-     *
-     * @param element
-     * @param list
-     * @param <T>
-     * @return
-     */
-    public static final <T> LinkList<LinkList<T>> combineByElement(final T element, final LinkList<T> list)
-    {
-        LinkList result = LinkList.Nil;
-
-        while(list.isNotEmpty())
-        {
-            result = result.insert(LinkLists.linkList(element, list.head));
-        }
-
-        return result;
+        return result.reverse();
     }
 
 }

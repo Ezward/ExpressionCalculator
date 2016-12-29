@@ -1,11 +1,6 @@
 package com.lumpofcode.expression;
 
-import com.lumpofcode.expression.associative.AssociativeExpressionEvaluator;
 import com.lumpofcode.utils.NumberFormatter;
-
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
 
 /**
  * NOTE: this code ignores exponentiation.
