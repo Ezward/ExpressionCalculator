@@ -2,6 +2,8 @@ package com.lumpofcode.expression.associative;
 
 import com.lumpofcode.collection.list.LinkList;
 import com.lumpofcode.collection.list.LinkLists;
+import com.lumpofcode.expression.ExpressionParser;
+import com.lumpofcode.utils.IntegerTruncateFormatter;
 import com.lumpofcode.utils.NumberFormatter;
 
 import java.util.HashSet;
@@ -193,5 +195,41 @@ public class AssociativeTreeHelper
         return builder.toString();
     }
 
+	/**
+     * Check that an expression is equivalent to another expression.
+     *
+     *
+     * @param targetExpression
+     * @param checkedExpression
+     * @return
+     */
+    public static final boolean areExpressionsEquivalent(final String targetExpression, final String checkedExpression)
+    {
+        //
+        // students may or may not parenthesize their expression, so the most general way to check
+        // for an equivalent expression is to fully parenthesize the target (correct expression) and
+        // the student's expression, then generate all equivalent target expressions and check
+        // that the student's expression is one of them.
+        // NOTE: this can still fail if the student has parenthesized in a non-standard way.
+        // TODO: write a simplifier that can remove unnecessary parenthesis so we can handle more equivalent expressions
+        //
+
+        //
+        // 1. TODO: remove unnecessary parenthesis from  the target and check expressions
+        // 2. fully parenthesize the target and checked expressions
+        // 3. generate all possible equivalent target expressions
+        // 4. if the checkExpression is in the permuted target expressions, it is equivalent.
+        //
+
+        // 2. fully parenthesize the target and checked expressions
+        final String parenthesizedTarget = ExpressionParser.parse(targetExpression).formatFullParenthesis();
+        final String parenthesizedCheck = ExpressionParser.parse(checkedExpression).formatFullParenthesis();
+
+        // 3. generate all possible equivalent target expressions
+        final LinkList<String> targetExppressions = AssociativeTreeHelper.generateCommutedExpressions(parenthesizedTarget, new IntegerTruncateFormatter());
+
+        // 4. if the checkExpression is in the permuted target expressions, it is equivalent.
+        return targetExppressions.find(parenthesizedCheck).isNotEmpty();
+    }
 
 }

@@ -824,7 +824,7 @@ public final class AssociativeExpressionEvaluator
 	 * expression node for a chain of division operations
 	 */
 	@Immutable
-	private static final class DivisionNode extends ChainedExpressionNode implements MultiplicationExpression
+	private static final class DivisionNode extends ChainedExpressionNode implements DivisionExpression
 	{
 		public DivisionNode(LinkList<Expression> theOperands)
 		{

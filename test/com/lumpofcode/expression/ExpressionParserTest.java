@@ -399,5 +399,8 @@ public class ExpressionParserTest
 		assertTrue(-200 == theExpression.evaluate());
 		assertEquals("10 + 5 * -6 - -20 / -2 * 3 + -100 - 50", theExpression.format());
 		assertEquals("(10 + (5 * -6) - (-20 / -2 * 3) + -100 - 50)", theExpression.formatFullParenthesis());
+
+		assertEquals("(1 + 2) * 3 + 4 becomes (((1 + 2) * 3) + 4)", "(((1 + 2) * 3) + 4)", ExpressionParser.parse("(1 + 2) * 3 + 4").formatFullParenthesis());
+		assertEquals("-(-1) becomes -(-1))", "-(-1)", ExpressionParser.parse("-(-1)").formatFullParenthesis());
 	}
 }
