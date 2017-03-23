@@ -63,10 +63,10 @@ public class AssociativeTreeHelper
 
                 We want to generate all the unique permutations of the operands and return them.
             */
-
-
+    
+    
             //
-            // 1. recursivevly get permutations of each operand
+            // 1. recursively get permutations of each operand
             //
             // for 2 * 3 + 4 * 5 we end up with a list of two sets permuted operands
             //     [["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]]
@@ -78,7 +78,7 @@ public class AssociativeTreeHelper
             {
                 permutedOperands = permutedOperands.append(generateCommutedExpressions(operand.head.format(), formatter));
             }
-
+    
             //
             // 2. Get all possible permutations of the operands
             //
@@ -87,7 +87,7 @@ public class AssociativeTreeHelper
             //     [[["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]], [["4 * 5", "5 * 4"], ["2 * 3", "3 * 2"]]]
             //
             LinkList<LinkList<LinkList<String>>> permutedChains = LinkLists.permutations(permutedOperands);
-
+    
             //
             // 3. combine operands to produce all possible combinations of permuted operands
             //    we do this in each set link list and the output is a linked list of operands
@@ -106,18 +106,79 @@ public class AssociativeTreeHelper
                 final LinkList<LinkList<String>> listOfOperandPurmutations = permutedChains.head;
                 LinkList<LinkList<String>> listOfOperandCombinations =
                     LinkLists.combinations(listOfOperandPurmutations);
-
+        
                 while(listOfOperandCombinations.isNotEmpty())
                 {
                     result = result.insert(
                         AssociativeTreeHelper.formatStringOperands(
                             listOfOperandCombinations.head,
                             chainedExpression.operator()));
-
+            
                     listOfOperandCombinations = listOfOperandCombinations.tail;
                 }
-
+        
                 permutedChains = permutedChains.tail;
+            }
+        }
+        else if((expression instanceof AssociativeExpressionEvaluator.DivisionExpression)
+            || (expression instanceof AssociativeExpressionEvaluator.SubtractionExpression))
+        {
+            //
+            // we can't commute around division or subtraction, but we
+            // still need to recursively commute the operands
+            //
+            final AssociativeExpressionEvaluator.ChainedExpression chainedExpression = (AssociativeExpressionEvaluator.ChainedExpression)expression;
+
+            /*
+                Here is a simple example, 2 * 3 - 4 * 5.  This has factorial(2) + factorial(2) = 4 permutations
+                2 * 3 - 4 * 5
+                2 * 3 - 5 * 4
+                3 * 2 - 4 * 5
+                3 * 2 - 5 * 4
+
+                We want to generate all the unique permutations of the operands and return them.
+            */
+    
+    
+            //
+            // 1. recursively get permutations of each operand
+            //
+            // for 2 * 3 + 4 * 5 we end up with a list of two sets permuted operands
+            //     [["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]]
+            // the first element of the list is the list of the first operand permutations
+            // the second element of the list is the list of the second operand permutations
+            //
+            LinkList<LinkList<String>> permutedOperands = LinkList.Nil;
+            for(LinkList<AssociativeExpressionEvaluator.Expression> operand = chainedExpression.operands(); operand.isNotEmpty(); operand = operand.tail)
+            {
+                permutedOperands = permutedOperands.append(generateCommutedExpressions(operand.head.format(), formatter));
+            }
+    
+            //
+            // 3. combine operands to produce all possible combinations of permuted operands
+            //    we do this in each set link list and the output is a linked list of operands
+            //    so for  [["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]]
+            //    we get  [["2 * 3", "4 * 5"], ["2 * 3", "5 * 4"], ["3 * 2", "4 * 5"], ["3 * 2", "5 * 4"]]
+            //
+            if(permutedOperands.isNotEmpty())
+            {
+                //
+                // each element contains a set of permutations for that operand.
+                // they must be combined with all the other oprands to produce
+                // all possible combinations of permuted operands in all possible permuted orders
+                //
+                LinkList<LinkList<String>> listOfOperandCombinations =
+                    LinkLists.combinations(permutedOperands);
+        
+                while(listOfOperandCombinations.isNotEmpty())
+                {
+                    result = result.insert(
+                        AssociativeTreeHelper.formatStringOperands(
+                            listOfOperandCombinations.head,
+                            chainedExpression.operator()));
+            
+                    listOfOperandCombinations = listOfOperandCombinations.tail;
+                }
             }
         }
         else

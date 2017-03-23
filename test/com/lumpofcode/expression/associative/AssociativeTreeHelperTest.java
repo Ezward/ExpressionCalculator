@@ -151,5 +151,47 @@ public class AssociativeTreeHelperTest
         // TODO: write code that can handle unnecessary parenthesis.
         // assertTrue("1 + 2 + 3 + 4 and 1 + (2 + 3) + 4 are equivalent", AssociativeTreeHelper.areExpressionsEquivalent("1 + 2 + 3 + 4", "1 + (2 + 3) + 4"));
     }
-
+    
+    @Test
+    public void generateCommutedMixedTest()
+    {
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * 3 - 4 * 5", new IntegerTruncateFormatter());
+        
+        for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
+        {
+            System.out.println(commutation.head);
+        }
+        
+        assertEquals("There should be 4 permutations.", 4, commutations.size());
+        assertTrue("2 * 3 - 4 * 5 should be generated", commutations.find("2 * 3 - 4 * 5").isNotEmpty());
+        assertTrue("2 * 3 - 5 * 4 should be generated", commutations.find("2 * 3 - 5 * 4").isNotEmpty());
+        assertTrue("3 * 2 - 4 * 5 should be generated", commutations.find("3 * 2 - 4 * 5").isNotEmpty());
+        assertTrue("3 * 2 - 5 * 4 should be generated", commutations.find("3 * 2 - 5 * 4").isNotEmpty());
+    }
+    
+    
+    
+    @Test
+    public void generateCommutedMixedTest_EXC1172()
+    {
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("10 * 3 - (2 + 20 * 2)", new IntegerTruncateFormatter());
+        
+        for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
+        {
+            System.out.println(commutation.head);
+        }
+        
+        assertEquals("There should be 8 permutations.", 8, commutations.size());
+        assertTrue("10 * 3 - (2 + 20 * 2) should be generated", commutations.find("10 * 3 - (2 + 20 * 2)").isNotEmpty());
+        assertTrue("10 * 3 - (2 + 2 * 20) should be generated", commutations.find("10 * 3 - (2 + 2 * 20)").isNotEmpty());
+        assertTrue("10 * 3 - (20 * 2 + 2) should be generated", commutations.find("10 * 3 - (20 * 2 + 2)").isNotEmpty());
+        assertTrue("10 * 3 - (2 * 20 + 2) should be generated", commutations.find("10 * 3 - (2 * 20 + 2)").isNotEmpty());
+        assertTrue("3 * 10 - (2 + 20 * 2) should be generated", commutations.find("10 * 3 - (2 + 20 * 2)").isNotEmpty());
+        assertTrue("3 * 10 - (2 + 2 * 20) should be generated", commutations.find("10 * 3 - (2 + 2 * 20)").isNotEmpty());
+        assertTrue("3 * 10 - (20 * 2 + 2) should be generated", commutations.find("10 * 3 - (20 * 2 + 2)").isNotEmpty());
+        assertTrue("3 * 10 - (2 * 20 + 2) should be generated", commutations.find("10 * 3 - (2 * 20 + 2)").isNotEmpty());
+    }
+    
+    
+    
 }
