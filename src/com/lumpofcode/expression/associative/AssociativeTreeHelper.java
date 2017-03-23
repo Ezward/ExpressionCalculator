@@ -6,9 +6,6 @@ import com.lumpofcode.expression.ExpressionParser;
 import com.lumpofcode.utils.IntegerTruncateFormatter;
 import com.lumpofcode.utils.NumberFormatter;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import static com.lumpofcode.expression.associative.AssociativeExpressionEvaluator.parse;
 
 /**
