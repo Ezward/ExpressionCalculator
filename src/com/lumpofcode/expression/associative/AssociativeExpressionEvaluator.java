@@ -927,15 +927,27 @@ public final class AssociativeExpressionEvaluator
 			if(!thisSign)
 			{
 				// unary negation
-				theBuilder.append('(');
 				theBuilder.append('-');
+
+				if(thisInnerExpression instanceof NumberExpression)
+				{
+					theBuilder.append('(');
+					thisInnerExpression.format(theBuilder);
+					theBuilder.append(')');
+				}
+				else
+				{
+					// this will put parenthesis around the inner expression
+					thisInnerExpression.formatFullParenthesis(theBuilder);
+				}
 			}
-			theBuilder.append('(');
-			thisInnerExpression.formatFullParenthesis(theBuilder);
-			theBuilder.append(')');
-			if(!thisSign)
+			else
 			{
-				theBuilder.append(')');
+				//
+				// leave parenthesis off, since we are
+				// formatting the inner expression with parenthesis
+				//
+				thisInnerExpression.formatFullParenthesis(theBuilder);
 			}
 		}
 		
