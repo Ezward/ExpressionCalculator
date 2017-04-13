@@ -140,7 +140,7 @@ public class AssociativeTreeHelper
             //
             // 1. recursively get permutations of each operand
             //
-            // for 2 * 3 + 4 * 5 we end up with a list of two sets permuted operands
+            // for 2 * 3 - 4 * 5 we end up with a list of two sets permuted operands
             //     [["2 * 3", "3 * 2"], ["4 * 5", "5 * 4"]]
             // the first element of the list is the list of the first operand permutations
             // the second element of the list is the list of the second operand permutations
