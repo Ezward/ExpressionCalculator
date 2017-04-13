@@ -2,13 +2,10 @@ package com.lumpofcode.expression.associative;
 
 import com.lumpofcode.collection.list.LinkList;
 import com.lumpofcode.utils.IntegerTruncateFormatter;
+
 import org.junit.Test;
 
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by Ed Murphy on 12/24/2016.
@@ -205,6 +202,48 @@ public class AssociativeTreeHelperTest
         assertTrue("3 * 10 - (2 + 2 * 20) should be generated", commutations.find("10 * 3 - (2 + 2 * 20)").isNotEmpty());
         assertTrue("3 * 10 - (20 * 2 + 2) should be generated", commutations.find("10 * 3 - (20 * 2 + 2)").isNotEmpty());
         assertTrue("3 * 10 - (2 * 20 + 2) should be generated", commutations.find("10 * 3 - (2 * 20 + 2)").isNotEmpty());
+    }
+    
+    
+    /**
+     * This test simulates the situation where we have an expression that we want to check
+     * against student input.  The student is correct if their expression is
+     * equivalent to the checked expression.  We handle this by generating a set of target
+     * expressions from the student's expression.
+     */
+    @Test
+    public void checkExpressionTest_EXC1294()
+    {
+        final String theCheckedExpression = "1*2*3/6";
+        String theStudentExpression = "2*1*(3/6)";
+        
+        //
+        // generate all permutations of the target expression.
+        // these will be fully parenthesized.
+        //
+        final LinkList<String> theTargetExpressions = AssociativeTreeHelper.generateCommutedExpressions(theStudentExpression, new IntegerTruncateFormatter());
+        for(LinkList<String> theTargetExpression = theTargetExpressions; theTargetExpression.isNotEmpty(); theTargetExpression = theTargetExpression.tail)
+        {
+            System.out.println(theTargetExpression.head);
+        }
+        
+        //
+        // generate a fully parenthesized version of the checked expression.
+        // remove the outer parenthesis if they are there.
+        //
+        theStudentExpression = AssociativeExpressionEvaluator.parse(theCheckedExpression).formatFullParenthesis();
+        if('(' == theStudentExpression.charAt(0) && ')' == theStudentExpression.charAt(theStudentExpression.length()- 1))
+        {
+            theStudentExpression = theStudentExpression.substring(1, theStudentExpression.length() - 1);
+        }
+        System.out.println();
+        System.out.println(theStudentExpression);
+        
+        //
+        // the expressions are equivalent if the fully parenthesized checked expression
+        // is in the set of permutations.
+        //
+        assertTrue("The fully parenthesized checked expression should be one of the permutations", theTargetExpressions.find(theStudentExpression).isNotEmpty());
     }
     
     
