@@ -210,6 +210,8 @@ public class AssociativeTreeHelperTest
      * against student input.  The student is correct if their expression is
      * equivalent to the checked expression.  We handle this by generating a set of target
      * expressions from the student's expression.
+     *
+     * This version uses string parsing to remove the extra parenthesis.
      */
     @Test
     public void checkExpressionTest_EXC1294()
@@ -245,6 +247,51 @@ public class AssociativeTreeHelperTest
         //
         assertTrue("The fully parenthesized checked expression should be one of the permutations", theTargetExpressions.find(theStudentExpression).isNotEmpty());
     }
-    
-    
+	
+	/**
+	 * This test simulates the situation where we have an expression that we want to check
+	 * against student input.  The student is correct if their expression is
+	 * equivalent to the checked expression.  We handle this by generating a set of target
+	 * expressions from the student's expression.
+	 *
+	 * This version uses the tree structure to remove the extra parenthsis.
+	 */
+	@Test
+	public void checkExpressionTest2_EXC1294()
+	{
+		final String theCheckedExpression = "1*2*3/6";
+		String theStudentExpression = "2*1*(3/6)";
+		
+		//
+		// generate all permutations of the target expression.
+		// these will be fully parenthesized.
+		//
+		final LinkList<String> theTargetExpressions = AssociativeTreeHelper.generateCommutedExpressions(theStudentExpression, new IntegerTruncateFormatter());
+		for(LinkList<String> theTargetExpression = theTargetExpressions; theTargetExpression.isNotEmpty(); theTargetExpression = theTargetExpression.tail)
+		{
+			System.out.println(theTargetExpression.head);
+		}
+		
+		//
+		// generate a fully parenthesized version of the checked expression.
+		// remove the outer parenthesis if they are there.
+		//
+		AssociativeExpressionEvaluator.Expression theParenthesisExpression =
+			AssociativeExpressionEvaluator.parse(AssociativeExpressionEvaluator.parse(theCheckedExpression).formatFullParenthesis());
+		if(theParenthesisExpression instanceof AssociativeExpressionEvaluator.ParenthesisExpression)
+		{
+			theParenthesisExpression = ((AssociativeExpressionEvaluator.ParenthesisExpression) theParenthesisExpression).innerExpression();
+		}
+		theStudentExpression = theParenthesisExpression.format();
+		System.out.println();
+		System.out.println(theStudentExpression);
+		
+		//
+		// the expressions are equivalent if the fully parenthesized checked expression
+		// is in the set of permutations.
+		//
+		assertTrue("The fully parenthesized checked expression should be one of the permutations", theTargetExpressions.find(theStudentExpression).isNotEmpty());
+	}
+	
+	
 }
