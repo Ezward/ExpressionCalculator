@@ -339,6 +339,9 @@ public class AssociativeTreeHelperTest
         final String theTargetExpression = "3*2*1/6";   // the 'authored' correct target expression
         String theStudentExpression = "2*1*(3/6)";      // the student's answer
     
+        assertFalse(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, theStudentExpression));
+    
+    
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*3*2"));
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*2*3"));
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "3*2*1/6"));
@@ -350,6 +353,45 @@ public class AssociativeTreeHelperTest
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "(2*3)*1/6"));
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*(3*2)"));
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*(2*3)"));
+    
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "(1/6*3)*2"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "(1/6*2)*3"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "3*(1/6*2)"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "2*(1/6*3)"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "3*(2*1/6)"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "2*(3*1/6)"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "(3*1/6)*2"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "(2*1/6)*3"));
+
+    }
+    
+    @Test
+    public void areExpressionsEquivalentTest()
+    {
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1", "1"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1", " ( 1 ) "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1", " ((1)) "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2", " 2 + 1 "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2", " (2 + 1) "));
+        
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 3 + 2 + 1 "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 1 + 3 + 2  "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 2 + 3 + 1 "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 2 + 1 + 3 "));
+    
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " ((2) + ((1) + (3))) "));
+    
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " (3 + 2) + 1 "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " (1 + 3) + 2  "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " (2 + 3) + 1 "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " (2 + 1) + 3 "));
+    
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 3 + (2 + 1) "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 1 + (3 + 2)  "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 2 + (3 + 1) "));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 2 + (1 + 3) "));
+    
+    
     }
     
 }

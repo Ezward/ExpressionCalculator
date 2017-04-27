@@ -141,23 +141,46 @@ public final class ExpressionTreeHelper
 		//
 		final ExpressionParser.Expression expression = ExpressionParser.parse(theExpressionText);
 		
+		if (expression instanceof ExpressionParser.ParenthesisExpression)
+		{
+			//
+			// remove unnecessary outer parenthesis
+			//
+			ExpressionParser.ParenthesisExpression parenthesis = (ExpressionParser.ParenthesisExpression) expression;
+			return removeParenthesis(parenthesis.innerExpression().format());
+		}
+		return innerRemoveParenthesis(theExpressionText);
+		
+	}
+	
+	private static String innerRemoveParenthesis(final String theExpressionText)
+	{
+		//
+		// parse the incoming expression text
+		//
+		final ExpressionParser.Expression expression = ExpressionParser.parse(theExpressionText);
+		
 		if(expression instanceof ExpressionParser.ParenthesisExpression)
 		{
 			//
 			// look for unnecessary parenthesis within the parenthesis
+			// or parenthesis around a literal number
+			// or parenthesis around an exponentiation.
+			// Basically, parenthesis round anything that is not a chained expression is unnecessary
 			//
 			ExpressionParser.ParenthesisExpression parenthesis = (ExpressionParser.ParenthesisExpression) expression;
-			if (parenthesis.innerExpression() instanceof ExpressionParser.ParenthesisExpression)
+			if ( ! (parenthesis.innerExpression() instanceof ExpressionParser.ChainedExpression))
 			{
 				//
-				// parenthesis inside parenthesis is always unnecessary
+				// parenthesis are only necessary around a chained expression
 				//
-				return spliceResult(
-					theExpressionText,
-					parenthesis.startIndex(),
-					parenthesis.endIndex(),
-					removeParenthesis(parenthesis.innerExpression().format()));
+				return innerRemoveParenthesis(parenthesis.innerExpression().format());
 			}
+			
+			//
+			// remove unnecessary parens from inner expression
+			//
+			return "(" + innerRemoveParenthesis(parenthesis.innerExpression().format()) + ")";
 		}
 		else if(expression instanceof ExpressionParser.MultiplicationExpression)
 		{
@@ -175,23 +198,35 @@ public final class ExpressionTreeHelper
 			{
 				if(left instanceof ExpressionParser.ParenthesisExpression)
 				{
-					final ExpressionParser.ParenthesisExpression innerParenthesis = (ExpressionParser.ParenthesisExpression)left;
+					//
+					// drill into all redundant outer parenthesis like, (((5))), to get to 5
+					//
+					ExpressionParser.ParenthesisExpression innerParenthesis = (ExpressionParser.ParenthesisExpression)left;
+					while(innerParenthesis.innerExpression() instanceof ExpressionParser.ParenthesisExpression)
+					{
+						innerParenthesis = (ExpressionParser.ParenthesisExpression)innerParenthesis.innerExpression();
+					}
+					
+					//
+					// if the inner expression is the same as the outer expression,
+					// then the parenthesis around the inner expression are unnecessary
+					//
 					if(innerParenthesis.innerExpression() instanceof ExpressionParser.MultiplicationExpression)
 					{
 						//
 						// remove unnecessary parenthesis and recursively do it until no changes.
 						//
-						theSimpleExpression = theSimpleExpression + removeParenthesis(innerParenthesis.innerExpression().format());
+						theSimpleExpression = theSimpleExpression + innerRemoveParenthesis(innerParenthesis.innerExpression().format());
 					}
 					else
 					{
-						theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+						theSimpleExpression = theSimpleExpression + innerRemoveParenthesis(left.format());
 					}
 					
 				}
 				else
 				{
-					theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+					theSimpleExpression = theSimpleExpression + innerRemoveParenthesis(left.format());
 				}
 				
 				if(null != right)
@@ -224,23 +259,35 @@ public final class ExpressionTreeHelper
 			{
 				if(left instanceof ExpressionParser.ParenthesisExpression)
 				{
-					final ExpressionParser.ParenthesisExpression innerParenthesis = (ExpressionParser.ParenthesisExpression)left;
+					//
+					// drill into all redundant outer parenthesis like, (((5))), to get to 5
+					//
+					ExpressionParser.ParenthesisExpression innerParenthesis = (ExpressionParser.ParenthesisExpression)left;
+					while(innerParenthesis.innerExpression() instanceof ExpressionParser.ParenthesisExpression)
+					{
+						innerParenthesis = (ExpressionParser.ParenthesisExpression)innerParenthesis.innerExpression();
+					}
+					
+					//
+					// if the inner expression is the same as the outer expression,
+					// then the parenthesis around the inner expression are unnecessary
+					//
 					if(innerParenthesis.innerExpression() instanceof ExpressionParser.AdditionExpression)
 					{
 						//
 						// remove unnecessary parenthesis and recursively do it until no changes.
 						//
-						theSimpleExpression = theSimpleExpression + removeParenthesis(innerParenthesis.innerExpression().format());
+						theSimpleExpression = theSimpleExpression + innerRemoveParenthesis(innerParenthesis.innerExpression().format());
 					}
 					else
 					{
-						theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+						theSimpleExpression = theSimpleExpression + innerRemoveParenthesis(left.format());
 					}
 					
 				}
 				else
 				{
-					theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+					theSimpleExpression = theSimpleExpression + innerRemoveParenthesis(left.format());
 				}
 				
 				if(null != right)

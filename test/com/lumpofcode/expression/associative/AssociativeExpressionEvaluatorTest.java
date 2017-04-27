@@ -255,6 +255,19 @@ public class AssociativeExpressionEvaluatorTest
 	}
 	
 	@Test
+	public void testParseTerms()
+	{
+		AssociativeExpressionEvaluator.Expression theExpression = AssociativeExpressionEvaluator.parse("123 + 456 - 456 - 123");
+		assertNotNull(theExpression);
+		
+		assertTrue(0 == theExpression.evaluate());
+		StringBuilder theBuilder = new StringBuilder();
+		theExpression.format(theBuilder);
+		assertEquals("123 + 456 - 456 - 123", theBuilder.toString());
+		
+	}
+		
+		@Test
 	public void testParseParenthesis()
 	{
 		AssociativeExpressionEvaluator.Expression theExpression = AssociativeExpressionEvaluator.parse("(100) ");
@@ -343,6 +356,8 @@ public class AssociativeExpressionEvaluatorTest
 	{
 		AssociativeExpressionEvaluator.Expression theExpression = AssociativeExpressionEvaluator.parse("(((10.0e0 + 5.0e0) * -6.0e0) - -20e0 / -2.000e000 * 3e0 + -1.0e02 - 5.0e1)");
 		assertNotNull(theExpression);
+		
+		System.out.println(theExpression.formatFullParenthesis());
 		
 		assertTrue(-270 == theExpression.evaluate());
 		assertEquals("(((10.0e0 + 5.0e0) * -6.0e0) - -20e0 / -2.000e000 * 3e0 + -1.0e02 - 5.0e1)", theExpression.format());

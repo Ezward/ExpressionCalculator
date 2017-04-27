@@ -122,5 +122,19 @@ public class ExpressionTreeHelperTest
 		assertEquals("Operator should be at index 3 of input", 3, ((ExpressionParser.AdditionExpression)operation).right().startIndex());
 		assertEquals("Operator is a subtraction", "-", ((ExpressionParser.AdditionExpression)operation).right().operator());
 	}
+	
+	@Test
+	public void removeParenthesisTest()
+	{
+		assertEquals("2 + 3", ExpressionTreeHelper.removeParenthesis("(((2)+(3)))"));
+		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("1 + (((2)+(3)))"));
+
+		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("(1+2+3)"));
+		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("((1+2+3))"));
+		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("((1+2)+3)"));
+		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("(1+(2)+3)"));
+		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("(1+(2+3))"));
+		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("(((1)+(((2)+(3)))))"));
+	}
 
 }
