@@ -3,6 +3,7 @@ package com.lumpofcode.expression.associative;
 import com.lumpofcode.collection.list.LinkList;
 import com.lumpofcode.collection.list.LinkLists;
 import com.lumpofcode.expression.ExpressionParser;
+import com.lumpofcode.expression.ExpressionTreeHelper;
 import com.lumpofcode.utils.IntegerTruncateFormatter;
 import com.lumpofcode.utils.NumberFormatter;
 
@@ -18,12 +19,10 @@ public class AssociativeTreeHelper
      * the rules of commutivity.
      *
      * @param theExpressionText
-     * @param formatter
      * @return
      */
     public static LinkList<String> generateCommutedExpressions(
-            final String theExpressionText,
-            final NumberFormatter formatter)
+            final String theExpressionText)
     {
         final AssociativeExpressionEvaluator.Expression expression = parse(theExpressionText);
         LinkList<String> result = LinkList.Nil;
@@ -31,7 +30,7 @@ public class AssociativeTreeHelper
         if(expression instanceof AssociativeExpressionEvaluator.ParenthesisExpression)
         {
             final AssociativeExpressionEvaluator.ParenthesisExpression parenthesisExpression = (AssociativeExpressionEvaluator.ParenthesisExpression)expression;
-            final LinkList<String> innerExpressions = generateCommutedExpressions(parenthesisExpression.innerExpression().format(), formatter);
+            final LinkList<String> innerExpressions = generateCommutedExpressions(parenthesisExpression.innerExpression().format());
 
             //
             // the result is the commuted expressions inside parenthesis
@@ -73,7 +72,7 @@ public class AssociativeTreeHelper
             LinkList<LinkList<String>> permutedOperands = LinkList.Nil;
             for(LinkList<AssociativeExpressionEvaluator.Expression> operand = chainedExpression.operands(); operand.isNotEmpty(); operand = operand.tail)
             {
-                permutedOperands = permutedOperands.append(generateCommutedExpressions(operand.head.format(), formatter));
+                permutedOperands = permutedOperands.append(generateCommutedExpressions(operand.head.format()));
             }
     
             //
@@ -148,7 +147,7 @@ public class AssociativeTreeHelper
             LinkList<LinkList<String>> permutedOperands = LinkList.Nil;
             for(LinkList<AssociativeExpressionEvaluator.Expression> operand = chainedExpression.operands(); operand.isNotEmpty(); operand = operand.tail)
             {
-                permutedOperands = permutedOperands.append(generateCommutedExpressions(operand.head.format(), formatter));
+                permutedOperands = permutedOperands.append(generateCommutedExpressions(operand.head.format()));
             }
     
             //
@@ -268,26 +267,28 @@ public class AssociativeTreeHelper
         // for an equivalent expression is to fully parenthesize the target (correct expression) and
         // the student's expression, then generate all equivalent target expressions and check
         // that the student's expression is one of them.
-        // NOTE: this can still fail if the student has parenthesized in a non-standard way.
-        // TODO: write a simplifier that can remove unnecessary parenthesis so we can handle more equivalent expressions
         //
 
         //
-        // 1. TODO: remove unnecessary parenthesis from  the target and check expressions
+        // 1. remove unnecessary parenthesis from  the target and check expressions
         // 2. fully parenthesize the target and checked expressions
         // 3. generate all possible equivalent target expressions
         // 4. if the checkExpression is in the permuted target expressions, it is equivalent.
         //
-
+    
+        // 1. remove unnecessary parenthesis from  the target and check expressions
+        final String simpleTarget = ExpressionTreeHelper.removeParenthesis(targetExpression);
+        final String simpleCheck = ExpressionTreeHelper.removeParenthesis(checkedExpression);
+    
         // 2. fully parenthesize the target and checked expressions
-        final String parenthesizedTarget = ExpressionParser.parse(targetExpression).formatFullParenthesis();
-        final String parenthesizedCheck = ExpressionParser.parse(checkedExpression).formatFullParenthesis();
+        final String parenthesizedTarget = ExpressionParser.parse(simpleTarget).formatFullParenthesis();
+        final String parenthesizedCheck = ExpressionParser.parse(simpleCheck).formatFullParenthesis();
 
         // 3. generate all possible equivalent target expressions
-        final LinkList<String> targetExppressions = AssociativeTreeHelper.generateCommutedExpressions(parenthesizedTarget, new IntegerTruncateFormatter());
+        final LinkList<String> targetExpressions = AssociativeTreeHelper.generateCommutedExpressions(parenthesizedTarget);
 
         // 4. if the checkExpression is in the permuted target expressions, it is equivalent.
-        return targetExppressions.find(parenthesizedCheck).isNotEmpty();
+        return targetExpressions.find(parenthesizedCheck).isNotEmpty();
     }
 
 }

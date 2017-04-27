@@ -1,6 +1,7 @@
 package com.lumpofcode.expression.associative;
 
 import com.lumpofcode.collection.list.LinkList;
+import com.lumpofcode.expression.ExpressionTreeHelper;
 import com.lumpofcode.utils.IntegerTruncateFormatter;
 
 import org.junit.Test;
@@ -15,7 +16,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedAdditionTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 + 3 + 4", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 + 3 + 4");
 
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -35,7 +36,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedMultiplicationTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * 3 * 4", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * 3 * 4");
 
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -55,7 +56,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedMixedExpressionsTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * 3 + 4 * 5", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * 3 + 4 * 5");
 
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -77,7 +78,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedParenthesisExpressionsTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * (3 + 4) * 5", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * (3 + 4) * 5");
 
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -102,7 +103,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedSubtractionTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 - 3", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 - 3");
 
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -116,7 +117,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedDivisionTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 / 3", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 / 3");
 
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -152,7 +153,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedMixedMinusTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * 3 - 4 * 5", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 * 3 - 4 * 5");
         
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -169,7 +170,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedMixedDivideTest()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 + 3 / 4 - 5", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("2 + 3 / 4 - 5");
         
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -186,7 +187,7 @@ public class AssociativeTreeHelperTest
     @Test
     public void generateCommutedMixedTest_EXC1172()
     {
-        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("10 * 3 - (2 + 20 * 2)", new IntegerTruncateFormatter());
+        LinkList<String> commutations = AssociativeTreeHelper.generateCommutedExpressions("10 * 3 - (2 + 20 * 2)");
         
         for(LinkList<String> commutation = commutations; commutation.isNotEmpty(); commutation = commutation.tail)
         {
@@ -223,7 +224,7 @@ public class AssociativeTreeHelperTest
         // generate all permutations of the target expression.
         // these will be fully parenthesized.
         //
-        final LinkList<String> theTargetExpressions = AssociativeTreeHelper.generateCommutedExpressions(theStudentExpression, new IntegerTruncateFormatter());
+        final LinkList<String> theTargetExpressions = AssociativeTreeHelper.generateCommutedExpressions(theStudentExpression);
         for(LinkList<String> theTargetExpression = theTargetExpressions; theTargetExpression.isNotEmpty(); theTargetExpression = theTargetExpression.tail)
         {
             System.out.println(theTargetExpression.head);
@@ -266,7 +267,7 @@ public class AssociativeTreeHelperTest
 		// generate all permutations of the target expression.
 		// these will be fully parenthesized.
 		//
-		final LinkList<String> theTargetExpressions = AssociativeTreeHelper.generateCommutedExpressions(theStudentExpression, new IntegerTruncateFormatter());
+		final LinkList<String> theTargetExpressions = AssociativeTreeHelper.generateCommutedExpressions(theStudentExpression);
 		for(LinkList<String> theTargetExpression = theTargetExpressions; theTargetExpression.isNotEmpty(); theTargetExpression = theTargetExpression.tail)
 		{
 			System.out.println(theTargetExpression.head);
@@ -292,6 +293,63 @@ public class AssociativeTreeHelperTest
 		//
 		assertTrue("The fully parenthesized checked expression should be one of the permutations", theTargetExpressions.find(theStudentExpression).isNotEmpty());
 	}
-	
-	
+    
+    @Test
+    public void checkExpressionTest3_EXC1294()
+    {
+        final String theCheckedExpression = "1*2*3/5";
+        String theStudentExpression = "1*2*(3/5)";
+        
+        //
+        // generate all permutations of the target expression.
+        // these will be fully parenthesized.
+        //
+        final LinkList<String> theTargetExpressions = AssociativeTreeHelper.generateCommutedExpressions(theStudentExpression);
+        for(LinkList<String> theTargetExpression = theTargetExpressions; theTargetExpression.isNotEmpty(); theTargetExpression = theTargetExpression.tail)
+        {
+            System.out.println(theTargetExpression.head);
+        }
+        
+        //
+        // generate a fully parenthesized version of the checked expression.
+        // remove the outer parenthesis if they are there.
+        //
+        AssociativeExpressionEvaluator.Expression theParenthesisExpression =
+            AssociativeExpressionEvaluator.parse(AssociativeExpressionEvaluator.parse(theCheckedExpression).formatFullParenthesis());
+        if(theParenthesisExpression instanceof AssociativeExpressionEvaluator.ParenthesisExpression)
+        {
+            theParenthesisExpression = ((AssociativeExpressionEvaluator.ParenthesisExpression) theParenthesisExpression).innerExpression();
+        }
+        theStudentExpression = theParenthesisExpression.format();
+        System.out.println();
+        System.out.println(theStudentExpression);
+        
+        //
+        // the expressions are equivalent if the fully parenthesized checked expression
+        // is in the set of permutations.
+        //
+        assertTrue("The fully parenthesized checked expression should be one of the permutations", theTargetExpressions.find(theStudentExpression).isNotEmpty());
+        
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1*2*3/6", "1*2*(3/6)"));
+    }
+    
+    @Test
+    public void checkExpressionTest2b_EXC1294()
+    {
+        final String theTargetExpression = "3*2*1/6";   // the 'authored' correct target expression
+        String theStudentExpression = "2*1*(3/6)";      // the student's answer
+    
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*3*2"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*2*3"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "3*2*1/6"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "2*3*1/6"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "3*1/6*2"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "2*1/6*3"));
+    
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "(3*2)*1/6"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "(2*3)*1/6"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*(3*2)"));
+        assertTrue(AssociativeTreeHelper.areExpressionsEquivalent(theTargetExpression, "1/6*(2*3)"));
+    }
+    
 }

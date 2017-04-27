@@ -133,7 +133,134 @@ public final class ExpressionTreeHelper
 		}
 		return operation;
 	}
-
+	
+	public static String removeParenthesis(final String theExpressionText)
+	{
+		//
+		// parse the incoming expression text
+		//
+		final ExpressionParser.Expression expression = ExpressionParser.parse(theExpressionText);
+		
+		if(expression instanceof ExpressionParser.ParenthesisExpression)
+		{
+			//
+			// look for unnecessary parenthesis within the parenthesis
+			//
+			ExpressionParser.ParenthesisExpression parenthesis = (ExpressionParser.ParenthesisExpression) expression;
+			if (parenthesis.innerExpression() instanceof ExpressionParser.ParenthesisExpression)
+			{
+				//
+				// parenthesis inside parenthesis is always unnecessary
+				//
+				return spliceResult(
+					theExpressionText,
+					parenthesis.startIndex(),
+					parenthesis.endIndex(),
+					removeParenthesis(parenthesis.innerExpression().format()));
+			}
+		}
+		else if(expression instanceof ExpressionParser.MultiplicationExpression)
+		{
+			final ExpressionParser.MultiplicationExpression multiplication = (ExpressionParser.MultiplicationExpression)expression;
+			
+			//
+			// check each operand in the multiplication chain.
+			// if any of them are a parenthesis and that inner expression is multiplication,
+			// then we can eliminate those parenthesis.
+			//
+			String theSimpleExpression = "";
+			ExpressionParser.Expression left = multiplication.left();
+			ExpressionParser.RightExpression right = multiplication.right();
+			while(null != left)
+			{
+				if(left instanceof ExpressionParser.ParenthesisExpression)
+				{
+					final ExpressionParser.ParenthesisExpression innerParenthesis = (ExpressionParser.ParenthesisExpression)left;
+					if(innerParenthesis.innerExpression() instanceof ExpressionParser.MultiplicationExpression)
+					{
+						//
+						// remove unnecessary parenthesis and recursively do it until no changes.
+						//
+						theSimpleExpression = theSimpleExpression + removeParenthesis(innerParenthesis.innerExpression().format());
+					}
+					else
+					{
+						theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+					}
+					
+				}
+				else
+				{
+					theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+				}
+				
+				if(null != right)
+				{
+					theSimpleExpression = theSimpleExpression + " " + right.operator() + " ";
+					left = right.expression();
+					right = right.next();
+				}
+				else
+				{
+					left = null;
+				}
+			}
+			
+			return theSimpleExpression;
+		}
+		else if(expression instanceof ExpressionParser.AdditionExpression)
+		{
+			final ExpressionParser.AdditionExpression addition = (ExpressionParser.AdditionExpression)expression;
+			
+			//
+			// check each operand in the multiplication chain.
+			// if any of them are a parenthesis and that inner expression is multiplication,
+			// then we can eliminate those parenthesis.
+			//
+			String theSimpleExpression = "";
+			ExpressionParser.Expression left = addition.left();
+			ExpressionParser.RightExpression right = addition.right();
+			while(null != left)
+			{
+				if(left instanceof ExpressionParser.ParenthesisExpression)
+				{
+					final ExpressionParser.ParenthesisExpression innerParenthesis = (ExpressionParser.ParenthesisExpression)left;
+					if(innerParenthesis.innerExpression() instanceof ExpressionParser.AdditionExpression)
+					{
+						//
+						// remove unnecessary parenthesis and recursively do it until no changes.
+						//
+						theSimpleExpression = theSimpleExpression + removeParenthesis(innerParenthesis.innerExpression().format());
+					}
+					else
+					{
+						theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+					}
+					
+				}
+				else
+				{
+					theSimpleExpression = theSimpleExpression + removeParenthesis(left.format());
+				}
+				
+				if(null != right)
+				{
+					theSimpleExpression = theSimpleExpression + " " + right.operator() + " ";
+					left = right.expression();
+					right = right.next();
+				}
+				else
+				{
+					left = null;
+				}
+			}
+			
+			return theSimpleExpression;
+		}
+		
+		return theExpressionText;    // nothing to do
+	}
+	
 	//
 	// find the left-most, inner-most parenthesis
 	//
@@ -156,7 +283,7 @@ public final class ExpressionTreeHelper
 		}
 
 		//
-		// if it is a chained expression (series of additons or multiplications)
+		// if it is a chained expression (series of additions or multiplications)
 		// then look in each operand, left to right, for parenthesis
 		//
 		if(expression instanceof ExpressionParser.ChainedExpression)

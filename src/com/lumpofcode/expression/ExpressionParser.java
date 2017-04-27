@@ -161,7 +161,7 @@ public final class ExpressionParser
 		/**
 		 * @return the Expression between the parenthesis.
 		 */
-		ExpressionNode innerExpression();
+		Expression innerExpression();
 
 	}
 	
