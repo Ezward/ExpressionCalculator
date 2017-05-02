@@ -4,7 +4,6 @@ import com.lumpofcode.collection.list.LinkList;
 import com.lumpofcode.collection.list.LinkLists;
 import com.lumpofcode.expression.ExpressionParser;
 import com.lumpofcode.expression.ExpressionTreeHelper;
-import com.lumpofcode.utils.IntegerTruncateFormatter;
 import com.lumpofcode.utils.NumberFormatter;
 
 import static com.lumpofcode.expression.associative.AssociativeExpressionEvaluator.parse;
@@ -279,7 +278,7 @@ public class AssociativeTreeHelper
         // 1. remove unnecessary parenthesis from  the target and check expressions
         final String simpleTarget = ExpressionTreeHelper.removeParenthesis(targetExpression);
         final String simpleCheck = ExpressionTreeHelper.removeParenthesis(checkedExpression);
-    
+        
         // 2. fully parenthesize the target and checked expressions
         final String parenthesizedTarget = ExpressionParser.parse(simpleTarget).formatFullParenthesis();
         final String parenthesizedCheck = ExpressionParser.parse(simpleCheck).formatFullParenthesis();

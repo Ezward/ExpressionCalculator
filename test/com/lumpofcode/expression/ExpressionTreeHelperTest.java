@@ -135,6 +135,10 @@ public class ExpressionTreeHelperTest
 		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("(1+(2)+3)"));
 		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("(1+(2+3))"));
 		assertEquals("1 + 2 + 3", ExpressionTreeHelper.removeParenthesis("(((1)+(((2)+(3)))))"));
+		
+		
+		assertEquals("1 * 2 * 3 / 6", ExpressionTreeHelper.removeParenthesis("1 * 2 * (3 / 6)"));
+		
 	}
 
 }

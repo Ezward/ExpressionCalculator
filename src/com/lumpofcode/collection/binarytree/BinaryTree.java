@@ -402,7 +402,7 @@ public final class BinaryTree<T>
      * @param <R> the return type of the elements
      * @return tree with same structure but elements mapped from T to R
      */
-    <R> BinaryTree<R> map(Function<? super T, ? extends R> mapper)
+    public <R> BinaryTree<R> map(Function<? super T, ? extends R> mapper)
     {
         if(this == Nil) return Nil;
         return new BinaryTree<>(mapper.apply(this.value), left.map(mapper), right.map(mapper));

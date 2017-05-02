@@ -1,8 +1,6 @@
 package com.lumpofcode.expression.associative;
 
 import com.lumpofcode.collection.list.LinkList;
-import com.lumpofcode.expression.ExpressionTreeHelper;
-import com.lumpofcode.utils.IntegerTruncateFormatter;
 
 import org.junit.Test;
 
@@ -390,8 +388,12 @@ public class AssociativeTreeHelperTest
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 1 + (3 + 2)  "));
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 2 + (3 + 1) "));
         assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1+2+3", " 2 + (1 + 3) "));
-    
-    
+	
+	    assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1 * 2 * 3 / 6", " 1 * 2 * (3 / 6) "));
+	
+	    assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("1 + 2 + (3 * 6)", " 1 + 2 + 3 * 6 "));
+	    assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("(1 + 2) + (3 * 6)", " 1 + 2 + 3 * 6 "));
+	    assertTrue(AssociativeTreeHelper.areExpressionsEquivalent("(1 + 2) + (3 * 6) / 4", " 1 + 2 + 3 * 6 / 4 "));
     }
     
 }
