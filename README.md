@@ -4,7 +4,7 @@ A simple expression calculator for the 4 operations and exponentiation.
 - The tree can then be directly evaluated using a recursive evaluation.
 - Also includes a stack-based, step-wise evaluator.
 
-Includes a both a traditional factor/term grammar parser and evaluator and an associative grammar parser and evaluator that separates out sums from differences and products from quotients.  The associative grammar is designed to separate out operations that are subject to the associative and commutative properties with the notion that the parse tree can then be more easily queried or manipulated using those mathematical properties.  For example the AssocativeTreeHelper.generateCommutedExpressions() method can generate a set of equivalent expressions by applying the commutative property.
+Includes a both a traditional factor/term grammar parser and evaluator and an associative grammar parser and evaluator that separates out sums from differences and products from quotients.  The associative grammar is designed to separate out operations that are subject to the associative and commutative properties with the notion that the parse tree can then be more easily queried or manipulated using those mathematical properties.  For example the AssocativeTreeHelper.generateCommutedExpressions() method can generate a set of equivalent expressions by applying the commutative property.  That method is used by AssociativeTreeHelper.areExpressionsEquivalent() to test is two expressions are equivalent based on the commutative property.
 
 Build using command line
 - install a Java 8 compiler and runtime and add it to your path
