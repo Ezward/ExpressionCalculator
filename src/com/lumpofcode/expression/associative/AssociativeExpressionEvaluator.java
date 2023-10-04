@@ -26,9 +26,9 @@ import com.lumpofcode.utils.StringUtils;
  * parenthesis ::= {sign} '(' expression ')'
  * value ::= [parenthesis | number ]
  * power ::= value{'^'value}
- * quotient ::= power {[ '*' | '/' ] power}*
- * product ::= quotient { '/'  quotient}
- * difference ::= product  {['+' | '-'] product}*
+ * quotient ::= power {['÷' | '/'] power}*
+ * product ::= quotient {['×' | '*']  quotient}*
+ * difference ::= product  {'-' product}*
  * sum ::= difference {'+' difference}*
  * expression ::= sum
  *
