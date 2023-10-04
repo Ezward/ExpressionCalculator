@@ -27,8 +27,8 @@ import com.lumpofcode.utils.StringUtils;
  * value ::= [parenthesis | number ]
  * power ::= value{'^'value}
  * quotient ::= power {['÷' | '/'] power}*
- * product ::= quotient {['×' | '*']  quotient}
- * difference ::= product  {['-' product}*
+ * product ::= quotient {['×' | '*']  quotient}*
+ * difference ::= product  {'-' product}*
  * sum ::= difference {'+' difference}*
  * expression ::= sum
  *
